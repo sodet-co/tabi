@@ -1,0 +1,53 @@
+/* Tabi — variables de marca. Único lugar donde se definen colores y medidas.
+   La paleta sale del logo: degradado rojo → coral → naranja, con un carbón cálido
+   como color de texto y de fondos oscuros. */
+:root {
+  /* Colores exactos del logo */
+  --marca-rojo: #E8232B;
+  --marca-coral: #EE4432;
+  --marca-naranja: #F7813F;
+  --degradado-marca: linear-gradient(90deg, #E8232B 0%, #EE4432 60%, #F7813F 100%);
+  --degradado-iso: linear-gradient(135deg, #FF7A45 0%, #F2552C 100%);
+
+  /* Rojo para botones y enlaces: un tono más profundo para que el texto blanco se lea bien */
+  --rojo-700: #B8161E;
+  --rojo-600: #D42029;
+  --rojo-050: #FDECEB;
+  --naranja-500: #F2552C;
+  --naranja-100: #FFE3D6;
+  --naranja-050: #FFF4EE;
+  --degradado-boton: linear-gradient(90deg, #D42029 0%, #E2392C 100%);
+
+  /* Neutros cálidos */
+  --carbon-900: #1E1615;
+  --carbon-800: #2B201E;
+  --carbon-600: #4A3B38;
+  --carbon-050: #F4EEEC;
+
+  --crema: #FFF9F5;
+  --blanco: #FFFFFF;
+  --texto: #2B201E;
+  --texto-suave: #75655F;
+  --linea: #F0E2D9;
+
+  --verde: #1B8A5F;
+  --ambar: #B7791F;
+  --error: #B42318;
+
+  --radio-sm: 10px;
+  --radio-md: 14px;
+  --radio-lg: 20px;
+  --radio-full: 999px;
+
+  --sombra: 0 1px 2px rgba(43, 32, 30, .04), 0 8px 24px rgba(43, 32, 30, .06);
+  --sombra-alta: 0 12px 32px rgba(43, 32, 30, .18);
+  --sombra-marca: 0 10px 28px rgba(232, 35, 43, .22);
+
+  /* Las fuentes las inyecta next/font en el layout raíz */
+  --fuente-titulo: var(--fuente-poppins), 'Segoe UI', system-ui, sans-serif;
+  --fuente-texto: var(--fuente-inter), 'Segoe UI', system-ui, sans-serif;
+
+  --ancho-movil: 520px;
+  --ancho-admin: 1180px;
+  --alto-barra: 76px;
+}

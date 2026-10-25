@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es" data-base=".">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#131F45">
+  <link rel="icon" href="assets/img/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/componentes.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <title>Entrar · Tabi</title>
+  <meta name="robots" content="noindex">
+</head>
+<body class="auth">
+  <main class="acceso-caja">
+    <div class="acceso-caja__marca">
+      <img src="assets/img/logo.svg" alt="">
+      <h1>Panel de tu restaurante</h1>
+      <p>Entra para administrar la carta y ver las ventas.</p>
+    </div>
+
+    <p class="acceso-error" id="error" role="alert" hidden></p>
+
+    <form class="acceso-forma" id="form-acceso">
+      <label class="campo"><span>Correo</span>
+        <input name="correo" type="email" autocomplete="username" required placeholder="admin@tabi.co"></label>
+      <label class="campo"><span>Contraseña</span>
+        <input name="clave" type="password" autocomplete="current-password" required placeholder="••••••••"></label>
+      <button class="boton boton--morado boton--bloque" type="submit">Entrar</button>
+    </form>
+
+    <p class="acceso-pista">Demo: <strong>admin@tabi.co</strong> · <strong>tabi123</strong></p>
+    <p class="acceso-volver"><a href="index.html">Volver a la página principal</a></p>
+  </main>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

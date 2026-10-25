@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es" data-base=".">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1C2A55">
+  <link rel="icon" href="assets/img/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/componentes.css">
+  <link rel="stylesheet" href="css/landing.css">
+  <title>Tabi · La carta de tu restaurante en un código QR</title>
+  <meta name="description" content="Tabi es la carta digital para restaurantes, bares y cafés: el cliente escanea el QR de la mesa, pide por WhatsApp y tú ves las ventas en un panel simple.">
+</head>
+<body class="landing">
+
+  <header class="encabezado">
+    <div class="encabezado__interior">
+      <a class="marca" href="#inicio">
+        <img class="marca__logo" src="assets/img/logo.svg" alt="">
+        <span class="marca__nombre">Tabi</span>
+      </a>
+      <nav class="encabezado__enlaces" id="enlaces" aria-label="Secciones de la página">
+        <a href="#funciones">Funciones</a>
+        <a href="#pasos">Cómo funciona</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+      <div class="encabezado__acciones">
+        <a class="boton boton--contorno boton--pequeno" href="carta/index.html">Ver demo</a>
+        <a class="boton boton--morado boton--pequeno" href="login.html">Entrar</a>
+      </div>
+      <button class="encabezado__menu" id="abrir-menu" aria-label="Abrir menú" aria-expanded="false">≡</button>
+    </div>
+  </header>
+
+  <main id="inicio">
+
+    <section class="hero">
+      <div class="hero__texto">
+        <h1 class="hero__titulo">Tu carta, en el código QR de cada mesa.</h1>
+        <p class="hero__bajada">
+          El cliente escanea, ve el menú actualizado y manda el pedido a tu WhatsApp.
+          Tú cambias precios, marcas agotados y revisas las ventas del día desde un panel
+          que se entiende sin capacitación.
+        </p>
+        <div class="hero__acciones">
+          <a class="boton boton--morado" href="carta/index.html">Ver una carta de ejemplo</a>
+          <a class="boton boton--contorno" href="#contacto">Quiero Tabi en mi restaurante</a>
+        </div>
+        <ul class="hero__puntos">
+          <li>Sin comisión por pedido</li>
+          <li>El cliente no descarga nada</li>
+          <li>Cambios publicados al instante</li>
+        </ul>
+      </div>
+
+      <div class="hero__demo">
+        <div class="telefono">
+          <div class="telefono__pantalla">
+            <div class="mini-portada">
+              <img src="assets/img/logo.svg" alt="">
+              <span class="mini-portada__nombre">La Cocina de Ana</span>
+            </div>
+            <span class="mini-boton">Menú</span>
+            <span class="mini-boton">WhatsApp</span>
+            <span class="mini-boton">Ubicación</span>
+            <div class="mini-barra">
+              <span>3 productos</span>
+              <strong>$37.500</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cifras">
+      <article><strong>1 minuto</strong><span>para cambiar un precio en toda la carta</span></article>
+      <article><strong>0 apps</strong><span>que el cliente tenga que instalar</span></article>
+      <article><strong>1 QR</strong><span>por mesa, con el pedido identificado</span></article>
+    </section>
+
+    <section class="seccion" id="funciones">
+      <div class="seccion__intro">
+        <h2>Lo que hace Tabi por tu restaurante</h2>
+        <p>Pensado para negocios que no tienen a nadie dedicado a la parte tecnológica.</p>
+      </div>
+      <div class="funciones">
+        <article class="funcion">
+          <h3>Carta siempre al día</h3>
+          <p>Cambias un precio o agregas un plato y la carta queda publicada de una vez. Nada de reimprimir menús.</p>
+        </article>
+        <article class="funcion">
+          <h3>Agotados en un clic</h3>
+          <p>Se acabó el lomo: lo marcas agotado y desaparece de la carta. El cliente deja de pedir lo que no hay.</p>
+        </article>
+        <article class="funcion">
+          <h3>Pedidos por WhatsApp</h3>
+          <p>El pedido llega al chat del restaurante con mesa, platos, notas de cocina y total ya sumado.</p>
+        </article>
+        <article class="funcion">
+          <h3>Ventas a la vista</h3>
+          <p>Ventas del día, ticket promedio, plato estrella y ventas por sección, sin armar un Excel.</p>
+        </article>
+        <article class="funcion">
+          <h3>Un QR por mesa</h3>
+          <p>Cada mesa tiene su código. El mesero sabe de dónde salió cada pedido desde el primer momento.</p>
+        </article>
+        <article class="funcion">
+          <h3>Tu marca, no la nuestra</h3>
+          <p>Tu logo, tus fotos y tus secciones. El cliente ve tu restaurante, no una plataforma genérica.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="pasos" id="pasos">
+      <div class="seccion__intro seccion__intro--claro">
+        <h2>Cómo se pone en marcha</h2>
+        <p>De la carta impresa al QR en la mesa, en la misma semana.</p>
+      </div>
+      <ol class="pasos__lista">
+        <li>
+          <span class="pasos__numero">1</span>
+          <h3>Cargamos tu menú</h3>
+          <p>Nos pasas la carta como la tengas y queda montada con secciones, precios y fotos.</p>
+        </li>
+        <li>
+          <span class="pasos__numero">2</span>
+          <h3>Pegas los códigos</h3>
+          <p>Recibes un QR por mesa listo para imprimir. El cliente escanea con la cámara y ya.</p>
+        </li>
+        <li>
+          <span class="pasos__numero">3</span>
+          <h3>Atiendes y revisas</h3>
+          <p>Los pedidos llegan a tu WhatsApp y tú entras al panel cuando quieras ver cómo va el día.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="seccion contacto" id="contacto">
+      <div class="contacto__texto">
+        <h2>Hablemos de tu carta</h2>
+        <p>Cuéntanos de tu restaurante y te mostramos cómo quedaría tu menú en Tabi. Respondemos por WhatsApp el mismo día.</p>
+        <ul class="contacto__datos">
+          <li><strong>WhatsApp</strong><span>+57 300 111 2233</span></li>
+          <li><strong>Correo</strong><span>hola@tabi.co</span></li>
+          <li><strong>Dónde estamos</strong><span>Valledupar, Colombia</span></li>
+        </ul>
+      </div>
+
+      <form class="contacto__forma tarjeta" id="form-contacto">
+        <label class="campo"><span>Tu nombre</span><input name="nombre" required placeholder="Ana Restrepo"></label>
+        <label class="campo"><span>Restaurante</span><input name="restaurante" required placeholder="La Cocina de Ana"></label>
+        <label class="campo"><span>WhatsApp</span><input name="telefono" inputmode="tel" required placeholder="300 111 2233"></label>
+        <label class="campo"><span>¿Qué necesitas?</span><textarea name="mensaje" placeholder="Tenemos 12 mesas y queremos dejar de imprimir cartas."></textarea></label>
+        <button class="boton boton--morado boton--bloque" type="submit">Enviar por WhatsApp</button>
+        <p class="texto-pequeno texto-suave">Se abre tu WhatsApp con el mensaje escrito. Tú decides si lo envías.</p>
+      </form>
+    </section>
+
+  </main>
+
+  <footer class="pie-landing">
+    <div class="pie-landing__interior">
+      <a class="marca marca--claro" href="#inicio">
+        <img class="marca__logo" src="assets/img/logo.svg" alt="">
+        <span class="marca__nombre">Tabi</span>
+      </a>
+      <nav aria-label="Enlaces del pie">
+        <a href="#funciones">Funciones</a>
+        <a href="#pasos">Cómo funciona</a>
+        <a href="carta/index.html">Carta de ejemplo</a>
+        <a href="login.html">Entrar al panel</a>
+      </nav>
+      <span class="texto-pequeno" id="derechos"></span>
+    </div>
+  </footer>
+
+  <script type="module" src="js/landing.js"></script>
+</body>
+</html>

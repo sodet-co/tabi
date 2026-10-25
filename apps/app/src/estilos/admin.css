@@ -1,0 +1,81 @@
+/* Panel de administración */
+.admin { min-height: 100dvh; background: var(--blanco); }
+
+.nav {
+  background: var(--carbon-900); color: var(--blanco);
+  position: sticky; top: 0; z-index: 30;
+}
+.nav__interior {
+  max-width: var(--ancho-admin); margin: 0 auto;
+  display: flex; align-items: center; gap: 6px; padding: 0 16px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.nav__interior::-webkit-scrollbar { display: none; }
+.nav__marca { display: flex; align-items: center; gap: 10px; padding: 14px 18px 14px 0; margin-right: 8px; flex: none; }
+.nav__logo { height: 26px; width: auto; }
+.nav__enlace {
+  padding: 20px 16px; font-family: var(--fuente-titulo); font-weight: 600;
+  font-size: .9rem; color: rgba(255, 255, 255, .7); white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+.nav__enlace:hover { color: var(--blanco); }
+.nav__enlace.activo { color: var(--blanco); border-image: var(--degradado-marca) 1; border-bottom-style: solid; }
+.nav__salida { margin-left: auto; padding-left: 16px; display: flex; align-items: center; gap: 12px; }
+.nav__usuario { font-size: .8125rem; color: rgba(255, 255, 255, .7); white-space: nowrap; }
+.nav__salida .boton--contorno { background: transparent; border-color: rgba(255, 255, 255, .3); color: var(--blanco); }
+
+.panel { max-width: var(--ancho-admin); margin: 0 auto; padding: 26px 16px 60px; }
+.panel__cabecera { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; margin-bottom: 22px; }
+.panel__saludo { font-size: 1.5rem; }
+.panel__acciones { display: flex; gap: 10px; }
+
+.rejilla { display: grid; gap: 16px; }
+.rejilla--4 { grid-template-columns: repeat(4, 1fr); }
+.rejilla--3 { grid-template-columns: repeat(3, 1fr); }
+.rejilla--2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 900px) { .rejilla--4 { grid-template-columns: repeat(2, 1fr); } .rejilla--3, .rejilla--2 { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .rejilla--4 { grid-template-columns: 1fr; } }
+
+.indicador { padding: 16px 18px; display: grid; gap: 4px; }
+.indicador__titulo { font-size: .8125rem; color: var(--texto-suave); font-weight: 600; }
+.indicador__valor { font-family: var(--fuente-titulo); font-size: 1.85rem; font-weight: 600; color: var(--carbon-800); }
+.indicador__valor--texto { font-size: 1.15rem; }
+.indicador__detalle { font-size: .75rem; color: var(--texto-suave); }
+
+.bloque { padding: 18px; display: grid; gap: 14px; margin-top: 16px; }
+.bloque__titulo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bloque__titulo h3 { color: var(--carbon-800); }
+
+.grafico { width: 100%; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 12px; font-size: .75rem; color: var(--texto-suave); }
+.leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+.leyenda i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+.tabla-envoltura { overflow-x: auto; }
+table.tabla { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.tabla th {
+  text-align: left; font-size: .75rem; color: var(--texto-suave); font-weight: 600;
+  padding: 10px 12px; border-bottom: 1px solid var(--linea); white-space: nowrap;
+}
+.tabla td { padding: 12px; border-bottom: 1px solid var(--linea); vertical-align: middle; }
+.tabla tr:last-child td { border-bottom: 0; }
+.tabla__acciones { display: flex; gap: 6px; justify-content: flex-end; }
+.tabla__foto { width: 42px; height: 42px; border-radius: var(--radio-sm); object-fit: cover; }
+.interruptor { display: inline-flex; gap: 8px; align-items: center; }
+.interruptor input { accent-color: var(--rojo-600); }
+
+.filtros { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+.filtros .campo { min-width: 160px; }
+.filtros .campo--ancho { flex: 1; }
+
+.formulario { display: grid; gap: 16px; max-width: 620px; }
+.formulario__fila { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+@media (max-width: 620px) { .formulario__fila { grid-template-columns: 1fr; } }
+.formulario__acciones { display: flex; gap: 10px; }
+
+.modal {
+  position: fixed; inset: 0; background: rgba(30, 22, 21, .5);
+  display: grid; place-items: center; padding: 16px; z-index: 50;
+}
+.modal__caja { background: var(--blanco); border-radius: var(--radio-lg); padding: 22px; width: min(560px, 100%); max-height: 90dvh; overflow: auto; }
+.modal__titulo { margin-bottom: 16px; }

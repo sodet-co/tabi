@@ -1,0 +1,62 @@
+/* Piezas reutilizadas por la landing, la carta y el panel */
+
+.boton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: var(--fuente-titulo); font-weight: 600; font-size: .95rem;
+  padding: 12px 18px; border: 1px solid transparent; border-radius: var(--radio-md);
+  background: var(--carbon-800); color: var(--blanco); cursor: pointer;
+  transition: filter .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.boton:hover { filter: brightness(1.08); }
+.boton:disabled { opacity: .5; cursor: not-allowed; }
+.boton--marca { background: var(--degradado-boton); box-shadow: var(--sombra-marca); }
+.boton--marca:hover { filter: brightness(1.05) saturate(1.05); }
+.boton--contorno { background: var(--blanco); border-color: var(--linea); color: var(--carbon-800); box-shadow: none; }
+.boton--contorno:hover { border-color: var(--naranja-100); filter: none; background: var(--naranja-050); }
+.boton--fantasma { background: transparent; color: var(--carbon-600); padding: 8px 10px; }
+.boton--peligro { background: var(--blanco); border-color: var(--linea); color: var(--error); }
+.boton--bloque { width: 100%; }
+.boton--pequeno { padding: 8px 12px; font-size: .85rem; border-radius: var(--radio-sm); box-shadow: none; }
+
+.tarjeta {
+  background: var(--blanco); border: 1px solid var(--linea);
+  border-radius: var(--radio-lg); box-shadow: var(--sombra);
+}
+
+.pastilla {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: var(--radio-full);
+  font-size: .75rem; font-weight: 600; background: var(--naranja-050); color: var(--rojo-700);
+}
+.pastilla--ok { background: rgba(27, 138, 95, .12); color: var(--verde); }
+.pastilla--alerta { background: rgba(183, 121, 31, .14); color: var(--ambar); }
+.pastilla--off { background: var(--carbon-050); color: var(--texto-suave); }
+
+.campo { display: grid; gap: 6px; }
+.campo > span { font-size: .8125rem; font-weight: 600; color: var(--texto-suave); }
+.campo input, .campo select, .campo textarea {
+  padding: 11px 13px; border: 1px solid var(--linea); border-radius: var(--radio-sm);
+  background: var(--blanco); width: 100%;
+}
+.campo input:focus, .campo select:focus, .campo textarea:focus { border-color: var(--naranja-500); }
+.campo textarea { resize: vertical; min-height: 80px; }
+
+.contador { display: inline-flex; align-items: center; gap: 2px; border: 1px solid var(--linea); border-radius: var(--radio-full); background: var(--blanco); }
+.contador button {
+  width: 32px; height: 32px; border: 0; background: transparent; cursor: pointer;
+  font-size: 1.1rem; line-height: 1; color: var(--carbon-800); border-radius: var(--radio-full);
+}
+.contador span { min-width: 22px; text-align: center; font-weight: 600; font-size: .9rem; }
+
+.vacio {
+  display: grid; gap: 10px; justify-items: center; text-align: center;
+  padding: 40px 20px; color: var(--texto-suave);
+}
+
+.aviso {
+  position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%);
+  background: var(--carbon-900); color: var(--blanco); padding: 10px 16px;
+  border-radius: var(--radio-full); font-size: .875rem; box-shadow: var(--sombra-alta);
+  opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 60;
+}
+.aviso.visible { opacity: 1; }

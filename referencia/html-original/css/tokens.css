@@ -1,0 +1,36 @@
+/* Tabi — variables de marca. Único lugar donde se definen colores y medidas. */
+:root {
+  --azul-900: #131F45;
+  --azul-800: #1C2A55;
+  --azul-600: #33437A;
+  --azul-050: #EAEDF6;
+
+  --morado-600: #5B3FD4;
+  --morado-500: #7357E8;
+  --morado-050: #EFEBFC;
+
+  --crema: #F6F3EC;
+  --blanco: #FFFFFF;
+  --texto: #1C2A55;
+  --texto-suave: #6B7189;
+  --linea: #E6E1D6;
+
+  --verde: #1B9E6E;
+  --ambar: #C98A1F;
+  --rojo: #CE4040;
+
+  --radio-sm: 10px;
+  --radio-md: 14px;
+  --radio-lg: 20px;
+  --radio-full: 999px;
+
+  --sombra: 0 1px 2px rgba(19, 31, 69, .04), 0 8px 24px rgba(19, 31, 69, .06);
+  --sombra-alta: 0 12px 32px rgba(19, 31, 69, .18);
+
+  --fuente-titulo: 'Outfit', 'Segoe UI', system-ui, sans-serif;
+  --fuente-texto: 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+  --ancho-movil: 520px;
+  --ancho-admin: 1180px;
+  --alto-barra: 76px;
+}

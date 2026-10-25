@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es" data-base="..">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1C2A55">
+  <link rel="icon" href="../assets/img/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/componentes.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <title>Menú · Tabi Admin</title>
+</head>
+<body class="admin">
+  <nav class="nav" id="nav" data-activo="menu"></nav>
+  <main class="panel">
+    <div class="panel__cabecera">
+      <h1 class="panel__saludo">Menú</h1>
+      <div style="display:flex; gap:10px;">
+        <button class="boton boton--contorno" id="nueva-seccion">Nueva sección</button>
+        <button class="boton boton--morado" id="nuevo-producto">Nuevo plato</button>
+      </div>
+    </div>
+
+    <section class="tarjeta bloque">
+      <div class="filtros">
+        <label class="campo"><span>Sección</span>
+          <select id="filtro-seccion"><option value="">Todas</option></select>
+        </label>
+        <label class="campo"><span>Buscar</span>
+          <input id="filtro-texto" type="search" placeholder="Nombre del plato">
+        </label>
+      </div>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <thead><tr><th></th><th>Plato</th><th>Sección</th><th>Precio</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="tabla-productos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tarjeta bloque">
+      <div class="bloque__titulo"><h3>Secciones</h3></div>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <thead><tr><th>Nombre</th><th>Platos</th><th>Visible en la carta</th><th></th></tr></thead>
+          <tbody id="tabla-secciones"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="modal" hidden>
+    <div class="modal__caja" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+      <h2 class="modal__titulo" id="modal-titulo">Nuevo plato</h2>
+      <form class="formulario" id="form-producto"></form>
+    </div>
+  </div>
+  <script type="module" src="../js/admin/menu-admin.js"></script>
+</body>
+</html>

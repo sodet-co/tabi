@@ -1,0 +1,119 @@
+/* App de cliente: pensada para celular, centrada en pantallas grandes */
+
+.app {
+  max-width: var(--ancho-movil); margin: 0 auto; min-height: 100dvh;
+  background: var(--crema); display: flex; flex-direction: column;
+}
+@media (min-width: 560px) {
+  body.cliente { background: var(--azul-050); }
+  .app { border-left: 1px solid var(--linea); border-right: 1px solid var(--linea); }
+}
+
+/* Encabezado con logo + nombre del restaurante */
+.cabecera {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 20px; position: sticky; top: 0; z-index: 30;
+  background: var(--crema); border-bottom: 1px solid var(--linea);
+}
+.cabecera__logo { width: 34px; height: 34px; border-radius: var(--radio-full); }
+.cabecera__nombre {
+  background: var(--azul-800); color: var(--blanco);
+  padding: 6px 14px; border-radius: var(--radio-full);
+  font-family: var(--fuente-titulo); font-weight: 600; font-size: .85rem;
+}
+.cabecera__volver { margin-left: auto; }
+
+.contenido { flex: 1; padding: 20px; padding-bottom: calc(var(--alto-barra) + 24px); }
+
+/* Pantalla de inicio */
+.portada {
+  border: 2px dashed var(--azul-600); border-radius: var(--radio-lg);
+  padding: 32px 20px; display: grid; justify-items: center; gap: 18px; margin-bottom: 26px;
+}
+.portada__logo { width: 116px; height: 116px; }
+.portada__nombre {
+  background: var(--azul-800); color: var(--blanco);
+  font-family: var(--fuente-titulo); font-weight: 600; letter-spacing: .01em;
+  padding: 10px 22px; border-radius: var(--radio-md); text-align: center;
+}
+.portada__lema { color: var(--texto-suave); font-size: .875rem; text-align: center; }
+
+.accesos { display: grid; gap: 14px; }
+.acceso {
+  display: grid; grid-template-columns: 44px 1fr 44px; align-items: center;
+  padding: 16px; background: var(--blanco); border: 1px solid var(--linea);
+  border-radius: var(--radio-md); box-shadow: var(--sombra);
+  font-family: var(--fuente-titulo); font-size: 1.15rem; font-weight: 600;
+  transition: transform .15s ease, border-color .15s ease;
+}
+.acceso:hover { transform: translateY(-2px); border-color: var(--azul-600); }
+.acceso__texto { text-align: center; }
+.acceso__icono { color: var(--azul-800); }
+
+.pie { padding: 22px 20px 28px; text-align: center; color: var(--texto-suave); font-size: .75rem; }
+
+/* Secciones del menú */
+.titulo-pantalla {
+  font-family: var(--fuente-titulo); font-size: 1.5rem; color: var(--azul-800);
+  text-align: center; margin-bottom: 20px;
+}
+.secciones { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.seccion {
+  aspect-ratio: 1 / .78; display: grid; place-content: center; gap: 6px; text-align: center;
+  background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio-md);
+  color: var(--azul-600); font-family: var(--fuente-titulo); font-size: 1.05rem; font-weight: 500;
+  box-shadow: var(--sombra); transition: border-color .15s ease, color .15s ease;
+}
+.seccion:hover { border-color: var(--morado-500); color: var(--morado-600); }
+.seccion__conteo { font-family: var(--fuente-texto); font-size: .72rem; color: var(--texto-suave); }
+
+/* Productos */
+.productos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.producto {
+  position: relative; background: var(--blanco); border: 1px solid var(--linea);
+  border-radius: var(--radio-md); overflow: hidden; box-shadow: var(--sombra);
+}
+.producto__media { position: relative; }
+.producto__foto { aspect-ratio: 4 / 3; width: 100%; object-fit: cover; background: var(--azul-050); }
+.producto__cuerpo { padding: 10px 12px 14px; display: grid; gap: 2px; }
+.producto__nombre { font-family: var(--fuente-titulo); font-size: .95rem; font-weight: 600; }
+.producto__desc {
+  font-size: .75rem; color: var(--texto-suave);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.producto__precio { color: var(--morado-600); font-weight: 600; font-size: .9rem; margin-top: 4px; }
+.producto__agregar {
+  position: absolute; bottom: -17px; right: 10px;
+  width: 34px; height: 34px; border-radius: var(--radio-full); border: 0;
+  background: var(--morado-600); color: var(--blanco); font-size: 1.25rem; line-height: 1;
+  cursor: pointer; box-shadow: var(--sombra-alta);
+}
+.producto--agotado { opacity: .55; }
+.producto--agotado .producto__agregar { display: none; }
+.producto__agotado { position: absolute; top: 10px; left: 10px; }
+
+/* Barra inferior de canasta */
+.barra-carrito {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: min(100%, var(--ancho-movil)); z-index: 40;
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  background: var(--azul-800); color: var(--blanco);
+  border-radius: var(--radio-lg) var(--radio-lg) 0 0; box-shadow: var(--sombra-alta);
+}
+.barra-carrito[hidden] { display: none; }
+.barra-carrito__foto { width: 44px; height: 44px; border-radius: var(--radio-sm); object-fit: cover; }
+.barra-carrito__datos { display: grid; line-height: 1.25; }
+.barra-carrito__conteo { font-size: .75rem; opacity: .75; }
+.barra-carrito__total { font-family: var(--fuente-titulo); font-weight: 600; font-size: 1.05rem; }
+.barra-carrito .boton { margin-left: auto; }
+
+/* Canasta */
+.lineas { display: grid; gap: 12px; }
+.linea { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; padding: 12px; }
+.linea__foto { width: 64px; height: 64px; border-radius: var(--radio-sm); object-fit: cover; }
+.linea__nombre { font-family: var(--fuente-titulo); font-weight: 600; font-size: .95rem; }
+.linea__precio { color: var(--texto-suave); font-size: .8125rem; }
+.resumen { display: grid; gap: 8px; padding: 16px; margin-top: 18px; }
+.resumen__fila { display: flex; justify-content: space-between; font-size: .9rem; }
+.resumen__fila--total { font-family: var(--fuente-titulo); font-size: 1.15rem; font-weight: 600; border-top: 1px solid var(--linea); padding-top: 10px; }
+.formulario-pedido { display: grid; gap: 14px; margin-top: 18px; }

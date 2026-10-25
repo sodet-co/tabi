@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es" data-base="..">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1C2A55">
+  <link rel="icon" href="../assets/img/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/componentes.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <title>Configuración · Tabi Admin</title>
+</head>
+<body class="admin">
+  <nav class="nav" id="nav" data-activo="configuracion"></nav>
+  <main class="panel">
+    <div class="panel__cabecera"><h1 class="panel__saludo">Configuración</h1></div>
+
+    <section class="tarjeta bloque">
+      <div class="bloque__titulo"><h3>Datos del restaurante</h3><span class="texto-pequeno texto-suave">Se muestran en la pantalla de inicio de la carta</span></div>
+      <form class="formulario" id="form-restaurante"></form>
+    </section>
+
+    <section class="tarjeta bloque">
+      <div class="bloque__titulo"><h3>Carta y QR</h3></div>
+      <p class="texto-pequeno texto-suave">Este es el enlace que abre el cliente al escanear el código de la mesa.</p>
+      <div class="filtros">
+        <label class="campo" style="flex:1"><span>Enlace de la carta</span><input id="enlace-carta" readonly></label>
+        <button class="boton boton--contorno" id="copiar-enlace">Copiar enlace</button>
+        <a class="boton" id="abrir-carta" href="../carta/index.html" target="_blank" rel="noopener">Abrir carta</a>
+      </div>
+    </section>
+
+    <section class="tarjeta bloque">
+      <div class="bloque__titulo"><h3>Datos de prueba</h3></div>
+      <p class="texto-pequeno texto-suave">Borra lo guardado en este navegador y vuelve a cargar la carta y los pedidos de ejemplo.</p>
+      <div><button class="boton boton--peligro" id="reiniciar">Restablecer datos de ejemplo</button></div>
+    </section>
+  </main>
+  <script type="module" src="../js/admin/configuracion.js"></script>
+</body>
+</html>

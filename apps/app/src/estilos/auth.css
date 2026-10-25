@@ -1,0 +1,31 @@
+/* Pantalla de acceso al panel */
+.auth {
+  min-height: 100dvh; display: grid; place-items: center; padding: 24px;
+  background:
+    radial-gradient(900px 420px at 15% -10%, rgba(242, 85, 44, .28), transparent 60%),
+    radial-gradient(600px 360px at 100% 110%, rgba(232, 35, 43, .18), transparent 60%),
+    var(--carbon-900);
+}
+
+.acceso-caja {
+  width: min(420px, 100%); background: var(--blanco);
+  border-radius: var(--radio-lg); padding: 32px; box-shadow: var(--sombra-alta);
+  display: grid; gap: 18px;
+}
+.acceso-caja__marca { display: grid; justify-items: center; gap: 10px; }
+.acceso-caja__marca img { height: 34px; width: auto; margin-bottom: 6px; }
+.acceso-caja__marca h1 { font-size: 1.35rem; color: var(--carbon-800); }
+.acceso-caja__marca p { font-size: .875rem; color: var(--texto-suave); text-align: center; }
+
+.acceso-forma { display: grid; gap: 14px; }
+.acceso-error {
+  background: var(--rojo-050); color: var(--error);
+  padding: 10px 12px; border-radius: var(--radio-sm); font-size: .85rem;
+}
+
+.acceso-pista {
+  background: var(--naranja-050); border-radius: var(--radio-sm);
+  padding: 12px; font-size: .8rem; color: var(--carbon-600); text-align: center;
+}
+.acceso-volver { text-align: center; font-size: .85rem; color: var(--texto-suave); }
+.acceso-volver a { color: var(--rojo-600); font-weight: 600; }

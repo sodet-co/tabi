@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es" data-base="..">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1C2A55">
+  <link rel="icon" href="../assets/img/logo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/componentes.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <title>Dashboard · Tabi Admin</title>
+</head>
+<body class="admin">
+  <nav class="nav" id="nav" data-activo="dashboard"></nav>
+  <main class="panel">
+    <div class="panel__cabecera">
+      <h1 class="panel__saludo" id="saludo">¡Hola!</h1>
+      <div class="pastilla" id="rango">Últimos 14 días</div>
+    </div>
+
+    <section class="rejilla rejilla--4" id="indicadores" aria-busy="true"></section>
+
+    <section class="tarjeta bloque">
+      <div class="bloque__titulo"><h3>Ventas por día</h3><span class="texto-pequeno texto-suave">Incluye pedidos en mesa y por WhatsApp</span></div>
+      <div class="grafico" id="grafico-ventas"></div>
+    </section>
+
+    <div class="rejilla rejilla--2">
+      <section class="tarjeta bloque">
+        <div class="bloque__titulo"><h3>Ventas por sección</h3></div>
+        <div class="grafico" id="grafico-secciones"></div>
+        <div class="leyenda" id="leyenda-secciones"></div>
+      </section>
+      <section class="tarjeta bloque">
+        <div class="bloque__titulo"><h3>Platos más pedidos</h3></div>
+        <div class="grafico" id="grafico-productos"></div>
+      </section>
+    </div>
+
+    <section class="tarjeta bloque">
+      <div class="bloque__titulo"><h3>Pedidos recientes</h3><a class="boton boton--contorno boton--pequeno" href="reportes.html">Ver reportes</a></div>
+      <div class="tabla-envoltura"><table class="tabla"><tbody id="pedidos-recientes"></tbody></table></div>
+    </section>
+  </main>
+  <script type="module" src="../js/admin/dashboard.js"></script>
+</body>
+</html>
