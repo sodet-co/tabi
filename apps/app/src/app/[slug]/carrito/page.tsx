@@ -4,9 +4,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
-import { carrito, total, unidades, useCarrito, type LineaCarrito } from '@/lib/carrito';
-import { crearPedido } from '@/lib/datos';
+import { carritoDe, total, unidades, useCarrito, type Carrito, type LineaCarrito } from '@/lib/carrito';
 import { precio, soloTelefono } from '@/lib/formato';
+import { useFuente, useSlug } from '@/lib/restaurante-actual';
 import type { Restaurante } from '@/lib/tipos';
 import { Cabecera, useRestaurante } from '@/componentes/carta/piezas';
 import { Foto, fotoProducto } from '@/componentes/ui/foto';
@@ -31,7 +31,7 @@ function mensajeWhatsApp(restaurante: Restaurante, lineas: LineaCarrito[], datos
   return partes.join('\n');
 }
 
-function Linea({ linea }: { linea: LineaCarrito }) {
+function Linea({ linea, carrito }: { linea: LineaCarrito; carrito: Carrito }) {
   return (
     <article className="tarjeta linea">
       <Foto className="linea__foto" src={fotoProducto(linea)} />
@@ -50,8 +50,11 @@ function Linea({ linea }: { linea: LineaCarrito }) {
 
 export default function Canasta() {
   const router = useRouter();
+  const slug = useSlug();
+  const fuente = useFuente();
+  const carrito = carritoDe(slug);
   const restaurante = useRestaurante();
-  const lineas = useCarrito();
+  const lineas = useCarrito(slug);
   const [enviando, setEnviando] = useState(false);
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {
@@ -61,7 +64,7 @@ export default function Canasta() {
 
     // Se registra el pedido antes de saltar a WhatsApp para que aparezca en el panel.
     setEnviando(true);
-    await crearPedido({
+    await fuente.crearPedido({
       cliente: datos.cliente,
       mesa: Number(datos.mesa) || null,
       nota: datos.nota || '',
@@ -72,12 +75,12 @@ export default function Canasta() {
     const url = `https://wa.me/${soloTelefono(restaurante.whatsapp)}?text=${encodeURIComponent(mensajeWhatsApp(restaurante, lineas, datos))}`;
     carrito.vaciar();
     window.open(url, '_blank', 'noopener');
-    router.push('/carta');
+    router.push(`/${slug}`);
   }
 
   return (
     <>
-      <Cabecera volverA="/carta/menu" />
+      <Cabecera volverA="/menu" />
       <main className="contenido">
         <h1 className="titulo-pantalla">Tu pedido</h1>
 
@@ -85,12 +88,12 @@ export default function Canasta() {
           <div className="vacio">
             <IconoCarrito />
             <p>Tu pedido está vacío.</p>
-            <Link className="boton boton--marca" href="/carta/menu">Ver el menú</Link>
+            <Link className="boton boton--marca" href={`/${slug}/menu`}>Ver el menú</Link>
           </div>
         ) : (
           <>
             <div className="lineas">
-              {lineas.map((linea) => <Linea key={linea.productoId} linea={linea} />)}
+              {lineas.map((linea) => <Linea key={linea.productoId} linea={linea} carrito={carrito} />)}
             </div>
 
             <div className="tarjeta resumen">

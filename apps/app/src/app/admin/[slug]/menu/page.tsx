@@ -1,12 +1,9 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
-import {
-  eliminarProducto, eliminarSeccion, guardarProducto, guardarSeccion,
-  obtenerProductos, obtenerSecciones
-} from '@/lib/datos';
 import { aCentavos, aPesos, precio } from '@/lib/formato';
-import type { Producto, Seccion } from '@/lib/tipos';
+import { useFuente } from '@/lib/restaurante-actual';
+import type { DatosRestaurante, Producto, Seccion } from '@/lib/tipos';
 import { useDatos } from '@/lib/usar-datos';
 import { aviso } from '@/componentes/ui/aviso';
 import { Foto, fotoProducto } from '@/componentes/ui/foto';
@@ -14,7 +11,8 @@ import { Foto, fotoProducto } from '@/componentes/ui/foto';
 // El modal se abre con null para "nuevo plato" o con el producto a editar.
 type Edicion = { producto: Producto | null } | null;
 
-function ModalProducto({ producto, secciones, alCerrar, alGuardar }: {
+function ModalProducto({ fuente, producto, secciones, alCerrar, alGuardar }: {
+  fuente: DatosRestaurante;
   producto: Producto | null;
   secciones: Seccion[];
   alCerrar: () => void;
@@ -29,7 +27,7 @@ function ModalProducto({ producto, secciones, alCerrar, alGuardar }: {
   async function guardar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const datos = Object.fromEntries(new FormData(evento.currentTarget)) as Record<string, string>;
-    await guardarProducto({
+    await fuente.guardarProducto({
       id: producto?.id,
       nombre: datos.nombre.trim(),
       descripcion: datos.descripcion.trim(),
@@ -76,7 +74,11 @@ function ModalProducto({ producto, secciones, alCerrar, alGuardar }: {
 }
 
 export default function MenuAdmin() {
-  const { datos, recargar } = useDatos(() => Promise.all([obtenerSecciones(), obtenerProductos()]));
+  const fuente = useFuente();
+  const { datos, recargar } = useDatos(
+    () => Promise.all([fuente.obtenerSecciones(), fuente.obtenerProductos()]),
+    [fuente]
+  );
   const [filtroSeccion, setFiltroSeccion] = useState('');
   const [filtroTexto, setFiltroTexto] = useState('');
   const [edicion, setEdicion] = useState<Edicion>(null);
@@ -91,7 +93,7 @@ export default function MenuAdmin() {
 
   async function borrarProducto(producto: Producto) {
     if (!confirm(`¿Borrar "${producto.nombre}" de la carta?`)) return;
-    await eliminarProducto(producto.id);
+    await fuente.eliminarProducto(producto.id);
     recargar();
     aviso('Plato borrado');
   }
@@ -101,20 +103,20 @@ export default function MenuAdmin() {
     const formulario = evento.currentTarget;
     const nombre = String(new FormData(formulario).get('nombre') || '').trim();
     if (!nombre) return;
-    await guardarSeccion({ nombre, activa: true });
+    await fuente.guardarSeccion({ nombre, activa: true });
     formulario.reset();
     recargar();
     aviso('Sección creada');
   }
 
   async function cambiarVisibilidad(seccion: Seccion, activa: boolean) {
-    await guardarSeccion({ id: seccion.id, activa });
+    await fuente.guardarSeccion({ id: seccion.id, activa });
     recargar();
   }
 
   async function borrarSeccion(seccion: Seccion) {
     if (!confirm(`Se borran la sección "${seccion.nombre}" y sus platos. ¿Continuar?`)) return;
-    await eliminarSeccion(seccion.id);
+    await fuente.eliminarSeccion(seccion.id);
     recargar();
     aviso('Sección borrada');
   }
@@ -198,6 +200,7 @@ export default function MenuAdmin() {
 
       {edicion && (
         <ModalProducto
+          fuente={fuente}
           producto={edicion.producto}
           secciones={secciones}
           alCerrar={() => setEdicion(null)}

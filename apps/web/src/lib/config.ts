@@ -9,3 +9,6 @@ export const CONFIG = {
 
 // Enlace absoluto a una ruta del producto, p. ej. enApp('/login').
 export const enApp = (ruta: string) => `${CONFIG.APP_URL}${ruta}`;
+
+// Carta de ejemplo a la que llevan los botones de "Ver demo".
+export const CARTA_DEMO = '/la-cocina-de-ana';

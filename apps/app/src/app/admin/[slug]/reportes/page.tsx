@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { obtenerPedidos } from '@/lib/datos';
 import { aPesos, fechaHora, numero, precio } from '@/lib/formato';
+import { useFuente } from '@/lib/restaurante-actual';
 import type { Pedido } from '@/lib/tipos';
 import { useDatos } from '@/lib/usar-datos';
 
@@ -60,7 +60,8 @@ function descargarCSV(lista: Pedido[]) {
 }
 
 export default function Reportes() {
-  const { datos: pedidos } = useDatos(obtenerPedidos);
+  const fuente = useFuente();
+  const { datos: pedidos } = useDatos(() => fuente.obtenerPedidos(), [fuente]);
   const [filtros, setFiltros] = useState(filtrosIniciales);
   const cambiar = (campo: keyof Filtros) => (evento: { target: { value: string } }) =>
     setFiltros((previos) => ({ ...previos, [campo]: evento.target.value }));

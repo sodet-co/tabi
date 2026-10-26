@@ -1,4 +1,4 @@
-import { enApp } from '@/lib/config';
+import { CARTA_DEMO, enApp } from '@/lib/config';
 import { Encabezado } from '@/componentes/landing/encabezado';
 import { FormContacto } from '@/componentes/landing/form-contacto';
 import { IsotipoTabi, LogoTabi } from '@tabi/ui/logo';
@@ -38,7 +38,7 @@ export default function Landing() {
                 que se entiende sin capacitación.
               </p>
               <div className="hero__acciones">
-                <a className="boton boton--marca" href={enApp('/carta')}>Ver una carta de ejemplo</a>
+                <a className="boton boton--marca" href={enApp(CARTA_DEMO)}>Ver una carta de ejemplo</a>
                 <a className="boton boton--contorno" href="#contacto">Quiero Tabi en mi restaurante</a>
               </div>
               <ul className="hero__puntos">
@@ -129,7 +129,7 @@ export default function Landing() {
           <nav aria-label="Enlaces del pie">
             <a href="#funciones">Funciones</a>
             <a href="#pasos">Cómo funciona</a>
-            <a href={enApp('/carta')}>Carta de ejemplo</a>
+            <a href={enApp(CARTA_DEMO)}>Carta de ejemplo</a>
             <a href={enApp('/login')}>Entrar al panel</a>
           </nav>
           <span className="texto-pequeno">© <AnioActual /> Tabi · Carta digital para restaurantes</span>

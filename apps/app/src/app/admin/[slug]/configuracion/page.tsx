@@ -2,7 +2,7 @@
 
 import { useRef, type FormEvent } from 'react';
 import { CONFIG } from '@/lib/config';
-import { guardarRestaurante, obtenerRestaurante, reiniciarDatos } from '@/lib/datos';
+import { useFuente, useSlug } from '@/lib/restaurante-actual';
 import type { Restaurante } from '@/lib/tipos';
 import { useDatos } from '@/lib/usar-datos';
 import { aviso } from '@/componentes/ui/aviso';
@@ -18,10 +18,12 @@ const CAMPOS: { nombre: keyof Restaurante; etiqueta: string; requerido?: boolean
 ];
 
 export default function Configuracion() {
-  const { datos } = useDatos(() => obtenerRestaurante().then((restaurante) => ({
+  const slug = useSlug();
+  const fuente = useFuente();
+  const { datos } = useDatos(() => fuente.obtenerRestaurante().then((restaurante) => ({
     restaurante,
-    enlace: new URL('/carta', window.location.origin).href
-  })));
+    enlace: new URL(`/${slug}`, window.location.origin).href
+  })), [fuente, slug]);
   const campoEnlace = useRef<HTMLInputElement>(null);
 
   if (!datos) return <main className="panel" aria-busy="true" />;
@@ -30,7 +32,7 @@ export default function Configuracion() {
   async function guardar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const valores = Object.fromEntries(new FormData(evento.currentTarget)) as Record<string, string>;
-    await guardarRestaurante({ ...valores, mesas: Number(valores.mesas) || 0 });
+    await fuente.guardarRestaurante({ ...valores, mesas: Number(valores.mesas) || 0 });
     aviso('Datos actualizados');
   }
 
@@ -46,7 +48,7 @@ export default function Configuracion() {
 
   async function reiniciar() {
     if (!confirm('Se borran los cambios guardados en este navegador. ¿Continuar?')) return;
-    await reiniciarDatos();
+    await fuente.reiniciarDatos();
     window.location.reload();
   }
 

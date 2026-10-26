@@ -1,6 +1,6 @@
 'use client';
 
-import { enApp } from '@/lib/config';
+import { CARTA_DEMO, enApp } from '@/lib/config';
 import { useState } from 'react';
 import { LogoTabi } from '@tabi/ui/logo';
 import { IconoHamburguesa } from '@tabi/ui/iconos';
@@ -24,7 +24,7 @@ export function Encabezado() {
           <a href="#contacto">Contacto</a>
         </nav>
         <div className="encabezado__acciones">
-          <a className="boton boton--contorno boton--pequeno" href={enApp('/carta')}>Ver demo</a>
+          <a className="boton boton--contorno boton--pequeno" href={enApp(CARTA_DEMO)}>Ver demo</a>
           <a className="boton boton--marca boton--pequeno" href={enApp('/login')}>Entrar</a>
         </div>
         <button

@@ -4,7 +4,7 @@
 
 export type Restaurante = {
   id: string;
-  slug?: string;
+  slug: string;
   nombre: string;
   lema: string;
   logo: string;
@@ -57,7 +57,15 @@ export type Pedido = {
 
 export type PedidoNuevo = Pick<Pedido, 'cliente' | 'mesa' | 'nota' | 'lineas' | 'total'>;
 
+// Una fuente atiende a varios restaurantes: cada uno se pide por su slug (el de la URL).
 export type FuenteDatos = {
+  // Los restaurantes que administra el usuario con sesión iniciada.
+  misRestaurantes(): Promise<Restaurante[]>;
+  restaurante(slug: string): DatosRestaurante;
+};
+
+// Todo lo de un solo restaurante: su ficha, su carta y sus pedidos.
+export type DatosRestaurante = {
   obtenerRestaurante(): Promise<Restaurante>;
   guardarRestaurante(datos: Partial<Restaurante>): Promise<Restaurante>;
 

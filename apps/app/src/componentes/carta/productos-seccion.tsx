@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
-import { carrito } from '@/lib/carrito';
-import { obtenerProductos, obtenerSecciones } from '@/lib/datos';
+import { carritoDe } from '@/lib/carrito';
 import { precio } from '@/lib/formato';
+import { useFuente, useSlug } from '@/lib/restaurante-actual';
 import type { Producto } from '@/lib/tipos';
 import { useDatos } from '@/lib/usar-datos';
 import { aviso } from '@/componentes/ui/aviso';
@@ -11,8 +11,10 @@ import { Foto, fotoProducto } from '@/componentes/ui/foto';
 import { IconoMenu } from '@tabi/ui/iconos';
 
 function Tarjeta({ producto }: { producto: Producto }) {
+  const slug = useSlug();
+
   function agregar() {
-    carrito.agregar(producto);
+    carritoDe(slug).agregar(producto);
     aviso(`${producto.nombre} agregado`);
   }
 
@@ -33,9 +35,10 @@ function Tarjeta({ producto }: { producto: Producto }) {
 }
 
 export function ProductosSeccion({ seccionId }: { seccionId: string }) {
+  const fuente = useFuente();
   const { datos } = useDatos(
-    () => Promise.all([obtenerSecciones(), obtenerProductos({ seccionId })]),
-    [seccionId]
+    () => Promise.all([fuente.obtenerSecciones(), fuente.obtenerProductos({ seccionId })]),
+    [fuente, seccionId]
   );
 
   const seccion = datos?.[0].find((s) => s.id === seccionId);

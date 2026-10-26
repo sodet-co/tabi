@@ -4,6 +4,7 @@ import type { Pedido, Producto, Restaurante, Seccion, LineaPedido, EstadoPedido 
 
 export const restauranteSemilla: Restaurante = {
   id: 'rest-001',
+  slug: 'la-cocina-de-ana',
   nombre: 'La Cocina de Ana',
   lema: 'Brunch, carnes y postres de casa',
   logo: '',

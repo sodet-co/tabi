@@ -23,6 +23,17 @@
 .nav__salida { margin-left: auto; padding-left: 16px; display: flex; align-items: center; gap: 12px; }
 .nav__usuario { font-size: .8125rem; color: rgba(255, 255, 255, .7); white-space: nowrap; }
 .nav__salida .boton--contorno { background: transparent; border-color: rgba(255, 255, 255, .3); color: var(--blanco); }
+/* Solo aparece si el usuario administra más de un restaurante. */
+.nav__selector {
+  flex: none; max-width: 200px; margin-right: 6px; padding: 7px 10px;
+  font: 600 .85rem var(--fuente-titulo); color: var(--blanco);
+  background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .25); border-radius: var(--radio-sm);
+}
+.nav__selector option { color: var(--carbon-900); }
+
+.elegir { margin-top: 6px; }
+.elegir__opcion { transition: border-color .15s, transform .15s; }
+.elegir__opcion:hover { border-color: var(--rojo-600); transform: translateY(-2px); }
 
 .panel { max-width: var(--ancho-admin); margin: 0 auto; padding: 26px 16px 60px; }
 .panel__cabecera { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; margin-bottom: 22px; }

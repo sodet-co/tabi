@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import { useEffect, type ReactNode } from 'react';
 import { soloTelefono } from '@/lib/formato';
+import { useSlug } from '@/lib/restaurante-actual';
 import { PieCarta, useRestaurante } from '@/componentes/carta/piezas';
 import { Foto } from '@/componentes/ui/foto';
 import { IconoMenu, IconoUbicacion, IconoWhatsapp } from '@tabi/ui/iconos';
@@ -18,6 +19,7 @@ const Contenido = ({ icono, texto }: { icono: ReactNode; texto: string }) => (
 );
 
 export default function InicioCarta() {
+  const slug = useSlug();
   const restaurante = useRestaurante();
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function InicioCarta() {
             </section>
 
             <nav className="accesos" aria-label="Accesos del restaurante">
-              <Link className="acceso" href="/carta/menu"><Contenido icono={<IconoMenu />} texto="Menú" /></Link>
+              <Link className="acceso" href={`/${slug}/menu`}><Contenido icono={<IconoMenu />} texto="Menú" /></Link>
               <a className="acceso" href={`https://wa.me/${soloTelefono(restaurante.whatsapp)}`} target="_blank" rel="noopener">
                 <Contenido icono={<IconoWhatsapp />} texto="WhatsApp" />
               </a>

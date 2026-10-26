@@ -1,7 +1,8 @@
 // Fuente de datos en el navegador. El día que haya backend solo se cambia de fuente
 // en .env (las funciones ya devuelven promesas).
+// Atiende un solo restaurante, el de la semilla: cualquier otro slug no existe.
 import { almacen, CLAVES } from '../almacenamiento';
-import type { FuenteDatos, Pedido, Producto, Restaurante, Seccion } from '../tipos';
+import type { DatosRestaurante, FuenteDatos, Pedido, Producto, Restaurante, Seccion } from '../tipos';
 import { restauranteSemilla, seccionesSemilla, productosSemilla, pedidosSemilla } from './semilla';
 
 type Carta = { secciones: Seccion[]; productos: Producto[] };
@@ -22,13 +23,14 @@ async function obtenerPedidos() {
   return [...pedidos].sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
 }
 
+// Lo guardado por versiones anteriores no tenía slug: la semilla lo completa.
 async function obtenerRestaurante() {
   let datos = almacen.leer<Restaurante | null>(CLAVES.restaurante, null);
   if (!datos) datos = almacen.escribir(CLAVES.restaurante, restauranteSemilla);
-  return datos;
+  return { ...restauranteSemilla, ...datos };
 }
 
-export const fuenteLocal: FuenteDatos = {
+const datosLocales: DatosRestaurante = {
   /* Restaurante ---------------------------------------------------------- */
   obtenerRestaurante,
 
@@ -117,6 +119,15 @@ export const fuenteLocal: FuenteDatos = {
 
   /* Utilidad para volver a los datos de ejemplo (no toca la sesión) */
   async reiniciarDatos() {
-    [CLAVES.carta, CLAVES.restaurante, CLAVES.carrito, CLAVES.pedidos].forEach((clave) => almacen.borrar(clave));
+    [CLAVES.carta, CLAVES.restaurante, `${CLAVES.carrito}.${restauranteSemilla.slug}`, CLAVES.pedidos]
+      .forEach((clave) => almacen.borrar(clave));
   }
+};
+
+const noEncontrado = () => Promise.reject(new Error('No se pudo cargar el restaurante'));
+const datosAjenos: DatosRestaurante = { ...datosLocales, obtenerRestaurante: noEncontrado };
+
+export const fuenteLocal: FuenteDatos = {
+  misRestaurantes: async () => [await obtenerRestaurante()],
+  restaurante: (slug) => (slug === restauranteSemilla.slug ? datosLocales : datosAjenos)
 };

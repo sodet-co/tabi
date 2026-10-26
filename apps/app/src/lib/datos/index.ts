@@ -7,10 +7,7 @@ import { fuenteSupabase } from './supabase';
 
 const fuente: FuenteDatos = CONFIG.FUENTE === 'supabase' ? fuenteSupabase : fuenteLocal;
 
-export const {
-  obtenerRestaurante, guardarRestaurante,
-  obtenerSecciones, guardarSeccion, eliminarSeccion,
-  obtenerProductos, obtenerProducto, guardarProducto, eliminarProducto,
-  obtenerPedidos, crearPedido, cambiarEstadoPedido,
-  reiniciarDatos
-} = fuente;
+export const { misRestaurantes } = fuente;
+
+// Devuelve siempre el mismo objeto para un mismo slug: sirve como dependencia de useDatos.
+export const datosDe = (slug: string) => fuente.restaurante(slug);
