@@ -29,3 +29,143 @@
 .pin-tecla:active { background: var(--naranja-100); }
 .pin-tecla:disabled { opacity: .5; }
 .pin-tecla--borrar { font-size: 1.2rem; color: var(--texto-suave); background: transparent; }
+
+/* Teclado del PIN dentro de una hoja */
+.pin { display: grid; gap: 16px; }
+.pin__encabezado { display: grid; gap: 4px; text-align: center; }
+.pin__encabezado h2 { font-size: 1.2rem; color: var(--carbon-800); }
+.pin__encabezado p { font-size: .875rem; color: var(--texto-suave); }
+
+/* En turno: barra arriba y contenido a todo el ancho */
+.turno { min-height: 100dvh; background: var(--crema); }
+.turno__barra {
+  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; background: var(--carbon-900); color: var(--blanco);
+}
+.turno__barra img { height: 22px; width: auto; }
+.turno__quien { display: grid; line-height: 1.25; margin-right: auto; min-width: 0; }
+.turno__quien strong { font-family: var(--fuente-titulo); }
+.turno__quien span { font-size: .75rem; color: rgba(255, 255, 255, .7); }
+.turno__barra .boton--contorno { background: transparent; color: var(--blanco); border-color: rgba(255, 255, 255, .3); }
+.turno__contenido { max-width: 960px; margin: 0 auto; padding: 16px 16px 48px; }
+
+/* Sala */
+.sala { display: grid; gap: 20px; }
+.sala__resumen { font-size: .875rem; color: var(--texto-suave); }
+.sala__ambiente { display: grid; gap: 10px; }
+.sala__ambiente h2 { font-size: 1rem; color: var(--carbon-600); }
+.sala__mesas { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.mesa-tile {
+  display: grid; gap: 2px; justify-items: start; align-content: start; min-height: 92px; padding: 12px;
+  border: 1px solid var(--linea); border-radius: var(--radio-md); background: var(--blanco);
+  text-align: left; cursor: pointer; transition: transform .15s, border-color .15s;
+}
+.mesa-tile:hover { transform: translateY(-1px); border-color: var(--carbon-600); }
+.mesa-tile__nombre { font-family: var(--fuente-titulo); font-size: 1.35rem; font-weight: 700; color: var(--carbon-800); }
+.mesa-tile__total { font-weight: 600; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.mesa-tile__detalle { font-size: .75rem; color: var(--texto-suave); }
+.mesa-tile--abierta { background: var(--naranja-050); border-color: var(--naranja-500); }
+.mesa-tile--abierta .mesa-tile__total { color: var(--rojo-700); }
+.mesa-tile--por_cobrar { background: rgba(183, 121, 31, .1); border-color: var(--ambar); }
+.mesa-tile--por_cobrar .mesa-tile__detalle { color: var(--ambar); font-weight: 600; }
+
+/* Detalle de una mesa */
+.detalle { display: grid; gap: 14px; }
+.detalle__cabecera { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.detalle__titulo { flex: 1; min-width: 200px; }
+.detalle__titulo h2 { font-size: 1.35rem; }
+.detalle__titulo h2 span { font-size: .9rem; font-weight: 500; }
+.detalle__total { font-family: var(--fuente-titulo); font-size: 1.4rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.detalle__acciones { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.cuenta { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio-lg); padding: 14px; display: grid; gap: 10px; }
+.cuenta__cabecera { display: flex; justify-content: space-between; align-items: baseline; }
+.cuenta__total { font-weight: 700; font-variant-numeric: tabular-nums; }
+.cuenta__items { list-style: none; padding: 0; display: grid; }
+.cuenta__acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.cuenta__acciones select, .hoja__fila select {
+  padding: 8px 10px; border: 1px solid var(--linea); border-radius: var(--radio-sm); background: var(--blanco); font-size: .85rem;
+}
+
+.item {
+  width: 100%; display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center;
+  padding: 10px 2px; border: 0; border-top: 1px solid var(--linea); background: none; text-align: left; cursor: pointer;
+}
+.cuenta__items li:first-child .item { border-top: 0; }
+.item:hover:not(:disabled) { background: var(--naranja-050); }
+.item__nombre { display: grid; min-width: 0; font-size: .9rem; }
+.item__parte { color: var(--rojo-700); font-weight: 600; }
+.item__nota { font-size: .75rem; color: var(--texto-suave); font-style: italic; }
+.item__precio { font-variant-numeric: tabular-nums; font-weight: 600; font-size: .9rem; }
+.item--anulado { cursor: default; opacity: .55; }
+.item--anulado .item__nombre, .item--anulado .item__precio { text-decoration: line-through; }
+
+/* Hojas: paneles que suben desde abajo en el celular y quedan centrados en pantallas grandes */
+.hoja {
+  position: fixed; inset: 0; z-index: 40; background: rgba(30, 22, 21, .5);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.hoja__caja {
+  width: min(560px, 100%); max-height: 92dvh; overflow: auto; background: var(--blanco);
+  border-radius: var(--radio-lg) var(--radio-lg) 0 0; padding: 18px 16px 22px; display: grid; gap: 16px; align-content: start;
+}
+.hoja__caja--pin { width: min(380px, 100%); }
+.hoja__caja--completa { height: 92dvh; grid-template-rows: auto auto 1fr auto; }
+@media (min-width: 720px) {
+  .hoja { align-items: center; }
+  .hoja__caja { border-radius: var(--radio-lg); }
+}
+.hoja__cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.hoja__cabecera h2 { font-size: 1.1rem; }
+.hoja__seccion { display: grid; gap: 10px; padding-top: 14px; border-top: 1px solid var(--linea); }
+.hoja__seccion h3 { font-size: .9rem; color: var(--carbon-600); }
+.hoja__fila { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.hoja__botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.hoja__pie { position: sticky; bottom: 0; background: var(--blanco); padding-top: 8px; }
+
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.chip {
+  flex: none; padding: 7px 13px; border-radius: var(--radio-full); border: 1px solid var(--linea);
+  background: var(--blanco); font-size: .85rem; font-weight: 600; color: var(--carbon-600); cursor: pointer;
+}
+.chip.activo { background: var(--carbon-800); border-color: var(--carbon-800); color: var(--blanco); }
+
+.productos-lista { list-style: none; padding: 0; overflow: auto; display: grid; align-content: start; }
+.producto-fila { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--linea); }
+.producto-fila__info { display: grid; min-width: 0; }
+.producto-fila__info span { font-size: .85rem; color: var(--texto-suave); font-variant-numeric: tabular-nums; }
+.producto-fila__nota { grid-column: 1 / -1; padding: 8px 10px; border: 1px solid var(--linea); border-radius: var(--radio-sm); font-size: .85rem; }
+.producto-fila.agotado { opacity: .5; }
+
+/* PIN equivocado: los puntos tiemblan, como en el iPhone */
+.pin__mensaje { min-height: 1.3em; text-align: center; font-size: .85rem; color: var(--texto-suave); }
+.pin__mensaje--error { color: var(--error); font-weight: 600; }
+.pin-puntos--error { animation: temblar .42s cubic-bezier(.36, .07, .19, .97); }
+.pin-puntos--error span { border-color: var(--error); }
+@keyframes temblar {
+  10%, 90% { transform: translateX(-2px); }
+  20%, 80% { transform: translateX(4px); }
+  30%, 50%, 70% { transform: translateX(-8px); }
+  40%, 60% { transform: translateX(8px); }
+}
+@media (prefers-reduced-motion: reduce) { .pin-puntos--error { animation: none; } }
+
+/* Pestañas Sala / Cerradas hoy */
+.vistas { margin-bottom: 14px; }
+
+/* Mesas cerradas hoy */
+.cerradas { list-style: none; padding: 0; display: grid; gap: 10px; }
+.cerrada { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--radio-md); overflow: hidden; }
+.cerrada__fila {
+  width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center;
+  padding: 12px 14px; border: 0; background: none; text-align: left; cursor: pointer;
+}
+.cerrada__fila:hover { background: var(--naranja-050); }
+.cerrada__mesa { font-family: var(--fuente-titulo); font-weight: 700; color: var(--carbon-800); }
+.cerrada__mesa span { font-weight: 500; font-size: .85rem; }
+.cerrada__detalle { grid-column: 1; font-size: .78rem; color: var(--texto-suave); }
+.cerrada__total { grid-column: 2; grid-row: 1 / span 2; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cerrada__cuerpo { display: grid; gap: 10px; padding: 0 14px 14px; }
+.cuenta--lectura { background: var(--crema); }
+.item--lectura { cursor: default; }
+.item--lectura:hover { background: none; }

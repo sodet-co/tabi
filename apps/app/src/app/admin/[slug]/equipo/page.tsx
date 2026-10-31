@@ -22,7 +22,7 @@ const ROLES: { valor: Rol; texto: string }[] = [
 ];
 const textoRol = (rol: Rol) => ROLES.find((r) => r.valor === rol)?.texto ?? rol;
 
-const PIN = { pattern: '[0-9]{4,6}', inputMode: 'numeric' as const, maxLength: 6, minLength: 4, autoComplete: 'off' };
+const PIN = { pattern: '[0-9]{4}', inputMode: 'numeric' as const, maxLength: 4, minLength: 4, autoComplete: 'off', title: '4 números' };
 
 // Muestra el error de la base en el aviso y no deja que la pantalla se caiga.
 async function intentar(accion: () => Promise<unknown>, exito: string) {
@@ -48,7 +48,7 @@ function ModalPin({ persona, alCerrar }: { persona: Persona; alCerrar: () => voi
       <div className="modal__caja" role="dialog" aria-modal="true" aria-labelledby="modal-pin">
         <h2 className="modal__titulo" id="modal-pin">PIN de {persona.nombre}</h2>
         <form className="formulario" onSubmit={guardar}>
-          <label className="campo"><span>PIN nuevo (4 a 6 números)</span>
+          <label className="campo"><span>PIN nuevo (4 números)</span>
             <input id="pin-nuevo" name="pin" type="password" required autoFocus {...PIN} /></label>
           <p className="texto-pequeno texto-suave">Díselo en persona. Tabi no lo vuelve a mostrar.</p>
           <div className="formulario__acciones">
@@ -233,7 +233,7 @@ export default function Equipo() {
               {ROLES.map((r) => <option key={r.valor} value={r.valor}>{r.texto}</option>)}
             </select>
           </label>
-          <label className="campo"><span>PIN (4 a 6 números)</span>
+          <label className="campo"><span>PIN (4 números)</span>
             <input id="nueva-persona-pin" name="pin" type="password" required {...PIN} /></label>
           <button className="boton boton--marca" type="submit">Agregar</button>
         </form>

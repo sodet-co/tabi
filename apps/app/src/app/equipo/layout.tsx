@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 // va dentro de un Suspense.
 export default function EquipoLayout({ children }: LayoutProps<'/equipo'>) {
   return (
-    <div className="auth">
+    <>
       <Suspense>{children}</Suspense>
       <Aviso />
-    </div>
+    </>
   );
 }
