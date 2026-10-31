@@ -17,34 +17,33 @@ const CLASE_ESTADO: Record<string, string> = {
   entregado: 'pastilla pastilla--ok'
 };
 
-type Filtros = { desde: string; hasta: string; canal: string; estado: string };
+type Filtros = { desde: string; hasta: string; estado: string };
 
 // Por defecto, los últimos 14 días contando hoy.
 function filtrosIniciales(): Filtros {
   const hoy = new Date();
   const hace14 = new Date();
   hace14.setDate(hoy.getDate() - 13);
-  return { desde: isoCorto(hace14), hasta: isoCorto(hoy), canal: '', estado: '' };
+  return { desde: isoCorto(hace14), hasta: isoCorto(hoy), estado: '' };
 }
 
-function filtrar(pedidos: Pedido[], { desde, hasta, canal, estado }: Filtros) {
+function filtrar(pedidos: Pedido[], { desde, hasta, estado }: Filtros) {
   const inicio = aFecha(desde);
   const fin = aFecha(hasta);
   if (fin) fin.setHours(23, 59, 59, 999);
   return pedidos.filter((pedido) => {
     const fecha = new Date(pedido.fecha);
     return (!inicio || fecha >= inicio) && (!fin || fecha <= fin) &&
-      (!canal || pedido.canal === canal) && (!estado || pedido.estado === estado);
+      (!estado || pedido.estado === estado);
   });
 }
 
 function descargarCSV(lista: Pedido[]) {
-  const filas: (string | number)[][] = [['Pedido', 'Fecha', 'Mesa', 'Canal', 'Estado', 'Platos', 'Total COP']];
+  const filas: (string | number)[][] = [['Pedido', 'Fecha', 'Cliente', 'Estado', 'Platos', 'Total COP']];
   lista.forEach((pedido) => filas.push([
     pedido.id,
     new Date(pedido.fecha).toLocaleString('es-CO'),
-    pedido.mesa || '',
-    pedido.canal,
+    pedido.cliente,
     pedido.estado,
     pedido.lineas.map((l) => `${l.cantidad}x ${l.nombre}`).join(' | '),
     aPesos(pedido.total)
@@ -78,11 +77,6 @@ export default function Reportes() {
         <div className="filtros">
           <label className="campo"><span>Desde</span><input type="date" value={filtros.desde} onChange={cambiar('desde')} /></label>
           <label className="campo"><span>Hasta</span><input type="date" value={filtros.hasta} onChange={cambiar('hasta')} /></label>
-          <label className="campo"><span>Canal</span>
-            <select value={filtros.canal} onChange={cambiar('canal')}>
-              <option value="">Todos</option><option value="mesa">Mesa</option><option value="whatsapp">WhatsApp</option>
-            </select>
-          </label>
           <label className="campo"><span>Estado</span>
             <select value={filtros.estado} onChange={cambiar('estado')}>
               <option value="">Todos</option><option value="recibido">Recibido</option>
@@ -102,20 +96,19 @@ export default function Reportes() {
         <div className="bloque__titulo"><h3>Pedidos</h3><span className="texto-pequeno texto-suave">{lista.length} pedidos en el filtro</span></div>
         <div className="tabla-envoltura">
           <table className="tabla">
-            <thead><tr><th>Pedido</th><th>Fecha</th><th>Mesa</th><th>Canal</th><th>Platos</th><th>Total</th><th>Estado</th></tr></thead>
+            <thead><tr><th>Pedido</th><th>Fecha</th><th>Cliente</th><th>Platos</th><th>Total</th><th>Estado</th></tr></thead>
             <tbody aria-busy={!pedidos}>
               {lista.slice(0, 200).map((pedido) => (
                 <tr key={pedido.id}>
                   <td><strong>{pedido.id}</strong></td>
                   <td>{fechaHora(pedido.fecha)}</td>
-                  <td>{pedido.mesa || '—'}</td>
-                  <td>{pedido.canal}</td>
+                  <td>{pedido.cliente}</td>
                   <td>{pedido.lineas.map((l) => `${l.cantidad}x ${l.nombre}`).join(', ')}</td>
                   <td><strong>{precio(pedido.total)}</strong></td>
                   <td><span className={CLASE_ESTADO[pedido.estado] || 'pastilla'}>{pedido.estado}</span></td>
                 </tr>
               ))}
-              {pedidos && !lista.length && <tr><td colSpan={7} className="texto-suave">Sin pedidos en ese rango.</td></tr>}
+              {pedidos && !lista.length && <tr><td colSpan={6} className="texto-suave">Sin pedidos en ese rango.</td></tr>}
             </tbody>
           </table>
         </div>

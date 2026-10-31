@@ -3,9 +3,9 @@
 -- No crea usuarios: para entrar al panel, crea el usuario en Supabase Auth y
 -- agrégalo como miembro (ver el final de este archivo).
 
-insert into public.restaurantes (slug, nombre, lema, whatsapp, direccion, mapa_url, horario, mesas)
+insert into public.restaurantes (slug, nombre, lema, whatsapp, direccion, mapa_url, horario)
 values ('la-cocina-de-ana', 'La Cocina de Ana', 'Brunch, carnes y postres de casa', '573001112233',
-        'Cra 19 #12-45, Valledupar', 'https://maps.google.com/?q=Valledupar', 'Lun a Dom · 8:00 a 22:00', 12);
+        'Cra 19 #12-45, Valledupar', 'https://maps.google.com/?q=Valledupar', 'Lun a Dom · 8:00 a 22:00');
 
 insert into public.secciones (restaurante_id, nombre, orden)
 select r.id, s.nombre, s.orden
@@ -51,3 +51,20 @@ where r.slug = 'la-cocina-de-ana';
 -- select r.id, u.id, 'admin'
 -- from public.restaurantes r, auth.users u
 -- where r.slug = 'la-cocina-de-ana' and u.email = 'tu-correo@ejemplo.com';
+
+-- Mesas: ambiente "Salón" con las mesas 1 a 12 y una "Terraza" con 4 más.
+insert into public.ambientes (restaurante_id, nombre, orden)
+select r.id, a.nombre, a.orden
+from public.restaurantes r, (values ('Salón', 1), ('Terraza', 2)) as a (nombre, orden)
+where r.slug = 'la-cocina-de-ana';
+
+insert into public.mesas (restaurante_id, ambiente_id, nombre, orden)
+select r.id, a.id, m.nombre, m.orden
+from public.restaurantes r
+join public.ambientes a on a.restaurante_id = r.id
+join (
+  select 'Salón' as ambiente, n::text as nombre, n as orden from generate_series(1, 12) as n
+  union all
+  select 'Terraza', 'T' || n, 100 + n from generate_series(1, 4) as n
+) as m on m.ambiente = a.nombre
+where r.slug = 'la-cocina-de-ana';

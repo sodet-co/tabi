@@ -12,7 +12,7 @@ import { Cabecera, useRestaurante } from '@/componentes/carta/piezas';
 import { Foto, fotoProducto } from '@/componentes/ui/foto';
 import { IconoCarrito, IconoWhatsapp } from '@tabi/ui/iconos';
 
-type DatosPedido = { cliente: string; mesa: string; nota: string };
+type DatosPedido = { cliente: string; nota: string };
 
 function mensajeWhatsApp(restaurante: Restaurante, lineas: LineaCarrito[], datos: DatosPedido) {
   const detalle = lineas
@@ -20,7 +20,7 @@ function mensajeWhatsApp(restaurante: Restaurante, lineas: LineaCarrito[], datos
     .join('\n');
   const partes = [
     `*Pedido para ${restaurante.nombre}*`,
-    datos.mesa ? `Mesa: ${datos.mesa}` : 'Para llevar',
+    'Domicilio',
     `Cliente: ${datos.cliente}`,
     '',
     detalle,
@@ -66,7 +66,6 @@ export default function Canasta() {
     setEnviando(true);
     await fuente.crearPedido({
       cliente: datos.cliente,
-      mesa: Number(datos.mesa) || null,
       nota: datos.nota || '',
       lineas: lineas.map(({ productoId, nombre, seccionId, precio, cantidad }) => ({ productoId, nombre, seccionId, precio, cantidad })),
       total: total(lineas)
@@ -103,7 +102,6 @@ export default function Canasta() {
 
             <form className="formulario-pedido" onSubmit={enviar}>
               <label className="campo"><span>Tu nombre</span><input name="cliente" required placeholder="Ana" /></label>
-              <label className="campo"><span>Mesa</span><input name="mesa" inputMode="numeric" placeholder="4" /></label>
               <label className="campo"><span>Nota para la cocina</span><textarea name="nota" placeholder="Sin cebolla, por favor" /></label>
               <button className="boton boton--marca boton--bloque" type="submit" disabled={enviando || !restaurante}>
                 <IconoWhatsapp /><span>Enviar pedido por WhatsApp</span>

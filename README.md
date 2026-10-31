@@ -28,12 +28,13 @@ En modo demo (`NEXT_PUBLIC_TABI_FUENTE=local`) al panel se entra con el botón "
 
 ## Base de datos
 
-`supabase/migrations/20261022000000_esquema_inicial.sql` define el esquema multi-restaurante,
-las políticas RLS y la función `crear_pedido` (recalcula el total con los precios de la base).
-`supabase/seed.sql` carga "La Cocina de Ana" con su carta.
+`supabase/migrations/20261031000000_esquema.sql` define todo el esquema. La mesa es la entidad
+central: ambientes → mesas (con su código para QR/NFC) → ocupaciones (cada apertura de la mesa,
+con su consecutivo por mesa y un código de 4 dígitos) → cuentas (particiones a, b, c…) → ítems.
+Los pedidos de domicilio entran por la función `crear_pedido`, que recalcula precios en la base.
+`supabase/seed.sql` carga "La Cocina de Ana" con su carta y 16 mesas (salón y terraza).
 
-Con la CLI de Supabase: `supabase link` y luego `supabase db push`. Antes de aplicarlo a un
-proyecto que ya tenga tablas, compáralo con lo que hay: la migración asume una base vacía.
+Con la CLI de Supabase: `supabase link` y luego `supabase db push`. El esquema asume una base vacía.
 
 ## Marca
 

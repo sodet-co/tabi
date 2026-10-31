@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Carta digital del restaurante. Escanea, elige y pide.'
 };
 
-// La carta de cada restaurante vive en /[slug] (el QR apunta a /la-cocina-de-ana?mesa=4).
+// La carta de cada restaurante vive en /[slug] (por ejemplo /la-cocina-de-ana).
 // El slug solo se conoce al llegar la visita: el Suspense deja el marco en el shell
 // estático y las pantallas leen el slug adentro.
 export default function CartaLayout({ children }: LayoutProps<'/[slug]'>) {

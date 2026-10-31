@@ -11,8 +11,7 @@ export const restauranteSemilla: Restaurante = {
   whatsapp: '573001112233',
   direccion: 'Cra 19 #12-45, Valledupar',
   mapa: 'https://maps.google.com/?q=Valledupar',
-  horario: 'Lun a Dom · 8:00 a 22:00',
-  mesas: 12
+  horario: 'Lun a Dom · 8:00 a 22:00'
 };
 
 export const seccionesSemilla: Seccion[] = [
@@ -83,9 +82,7 @@ export function pedidosSemilla(dias = 14): Pedido[] {
       pedidos.push({
         id: `PD-${String(pedidos.length + 1).padStart(4, '0')}`,
         fecha: fecha.toISOString(),
-        mesa: 1 + Math.floor(rnd() * 12),
         cliente: ['Ana', 'Luis', 'Carolina', 'Jorge', 'María', 'Andrés'][Math.floor(rnd() * 6)],
-        canal: rnd() > .35 ? 'mesa' : 'whatsapp',
         estado: estados[Math.floor(rnd() * estados.length)],
         lineas,
         total

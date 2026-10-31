@@ -13,8 +13,7 @@ const CAMPOS: { nombre: keyof Restaurante; etiqueta: string; requerido?: boolean
   { nombre: 'whatsapp', etiqueta: 'WhatsApp (con indicativo, ej. 573001112233)' },
   { nombre: 'direccion', etiqueta: 'Dirección' },
   { nombre: 'mapa', etiqueta: 'Enlace de Google Maps' },
-  { nombre: 'horario', etiqueta: 'Horario de atención' },
-  { nombre: 'mesas', etiqueta: 'Número de mesas', tipo: 'number' }
+  { nombre: 'horario', etiqueta: 'Horario de atención' }
 ];
 
 export default function Configuracion() {
@@ -32,7 +31,7 @@ export default function Configuracion() {
   async function guardar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const valores = Object.fromEntries(new FormData(evento.currentTarget)) as Record<string, string>;
-    await fuente.guardarRestaurante({ ...valores, mesas: Number(valores.mesas) || 0 });
+    await fuente.guardarRestaurante(valores);
     aviso('Datos actualizados');
   }
 
@@ -75,8 +74,8 @@ export default function Configuracion() {
       </section>
 
       <section className="tarjeta bloque">
-        <div className="bloque__titulo"><h3>Carta y QR</h3></div>
-        <p className="texto-pequeno texto-suave">Este es el enlace que abre el cliente al escanear el código de la mesa.</p>
+        <div className="bloque__titulo"><h3>Enlace de la carta</h3></div>
+        <p className="texto-pequeno texto-suave">Ponlo en tu Instagram: lleva a la carta de domicilios.</p>
         <div className="filtros">
           <label className="campo campo--ancho"><span>Enlace de la carta</span><input ref={campoEnlace} value={enlace} readOnly /></label>
           <button className="boton boton--contorno" onClick={copiar}>Copiar enlace</button>

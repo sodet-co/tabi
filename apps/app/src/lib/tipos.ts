@@ -12,7 +12,6 @@ export type Restaurante = {
   direccion: string;
   mapa: string;
   horario: string;
-  mesas: number;
 };
 
 export type Seccion = {
@@ -41,21 +40,18 @@ export type LineaPedido = {
 };
 
 export type EstadoPedido = 'recibido' | 'preparando' | 'entregado';
-export type CanalPedido = 'mesa' | 'whatsapp';
-
+// Pedido de domicilio: llega desde el link de Instagram y termina en WhatsApp.
 export type Pedido = {
   id: string;
   fecha: string;
-  mesa: number | null;
   cliente: string;
   nota?: string;
-  canal: CanalPedido;
   estado: EstadoPedido;
   lineas: LineaPedido[];
   total: number;
 };
 
-export type PedidoNuevo = Pick<Pedido, 'cliente' | 'mesa' | 'nota' | 'lineas' | 'total'>;
+export type PedidoNuevo = Pick<Pedido, 'cliente' | 'nota' | 'lineas' | 'total'>;
 
 // Una fuente atiende a varios restaurantes: cada uno se pide por su slug (el de la URL).
 export type FuenteDatos = {

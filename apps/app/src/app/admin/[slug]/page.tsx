@@ -83,7 +83,7 @@ export default function Dashboard() {
       </section>
 
       <section className="tarjeta bloque">
-        <div className="bloque__titulo"><h3>Ventas por día</h3><span className="texto-pequeno texto-suave">Incluye pedidos en mesa y por WhatsApp</span></div>
+        <div className="bloque__titulo"><h3>Ventas por día</h3><span className="texto-pequeno texto-suave">Pedidos de domicilio</span></div>
         <div className="grafico">
           <Barras datos={ventasPorDia(pedidos)} formato={(v) => precio(v).replace('COP', '').trim()} />
         </div>
@@ -117,8 +117,7 @@ export default function Dashboard() {
                 <tr key={pedido.id}>
                   <td><strong>{pedido.id}</strong></td>
                   <td>{fechaHora(pedido.fecha)}</td>
-                  <td>{pedido.mesa ? `Mesa ${pedido.mesa}` : 'Para llevar'}</td>
-                  <td><span className="pastilla">{pedido.canal}</span></td>
+                  <td>{pedido.cliente}</td>
                   <td>{pedido.lineas.reduce((s, l) => s + l.cantidad, 0)} platos</td>
                   <td><strong>{precio(pedido.total)}</strong></td>
                 </tr>

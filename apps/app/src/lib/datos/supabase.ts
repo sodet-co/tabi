@@ -18,8 +18,7 @@ const aRestaurante = (fila: Fila): Restaurante => ({
   whatsapp: fila.whatsapp || '',
   direccion: fila.direccion || '',
   mapa: fila.mapa_url || '',
-  horario: fila.horario || '',
-  mesas: fila.mesas || 0
+  horario: fila.horario || ''
 });
 
 const aSeccion = (fila: Fila): Seccion => ({ id: fila.id, nombre: fila.nombre, orden: fila.orden, activa: fila.activa });
@@ -37,10 +36,8 @@ const aProducto = (fila: Fila): Producto => ({
 const aPedido = (fila: Fila): Pedido => ({
   id: fila.codigo,
   fecha: fila.creado_en,
-  mesa: fila.mesa,
   cliente: fila.cliente,
   nota: fila.nota,
-  canal: fila.canal,
   estado: fila.estado,
   total: fila.total_centavos,
   lineas: ((fila.pedido_items || []) as Fila[]).map((item) => ({
@@ -82,8 +79,7 @@ function datosRestaurante(slug: string): DatosRestaurante {
           whatsapp: datos.whatsapp,
           direccion: datos.direccion,
           mapa_url: datos.mapa,
-          horario: datos.horario,
-          mesas: datos.mesas
+          horario: datos.horario
         }).eq('id', id).select().single(),
         'No se pudieron guardar los datos del restaurante'
       );
@@ -183,7 +179,6 @@ function datosRestaurante(slug: string): DatosRestaurante {
       const datos = revisar(
         await supabase().rpc('crear_pedido', {
           p_restaurante_slug: slug,
-          p_mesa: pedido.mesa,
           p_cliente: pedido.cliente,
           p_nota: pedido.nota,
           p_items: pedido.lineas.map((linea) => ({ productoId: linea.productoId, cantidad: linea.cantidad }))
@@ -195,7 +190,6 @@ function datosRestaurante(slug: string): DatosRestaurante {
         id: datos.codigo,
         total: datos.total_centavos,
         estado: 'recibido',
-        canal: 'whatsapp',
         fecha: new Date().toISOString()
       };
     },

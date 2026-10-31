@@ -105,7 +105,6 @@ const datosLocales: DatosRestaurante = {
       id: `PD-${String(pedidos.length + 1).padStart(4, '0')}`,
       fecha: new Date().toISOString(),
       estado: 'recibido',
-      canal: 'whatsapp',
       ...pedido
     };
     almacen.escribir(CLAVES.pedidos, [nuevo, ...pedidos]);
