@@ -22,6 +22,7 @@ const ENLACES = [
   { destino: '', texto: 'Dashboard' },
   { destino: '/menu', texto: 'Menú' },
   { destino: '/reportes', texto: 'Reportes' },
+  { destino: '/equipo', texto: 'Equipo' },
   { destino: '/configuracion', texto: 'Configuración' }
 ] as const;
 

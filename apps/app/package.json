@@ -12,11 +12,13 @@
     "@supabase/supabase-js": "^2.118.0",
     "@tabi/ui": "*",
     "next": "16.4.2",
+    "qrcode": "^1.5.4",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

@@ -1,7 +1,7 @@
 -- Datos de ejemplo: un restaurante con su carta. Se carga con `supabase db reset`
 -- (o pegándolo en el SQL Editor sobre una base vacía).
--- No crea usuarios: para entrar al panel, crea el usuario en Supabase Auth y
--- agrégalo como miembro (ver el final de este archivo).
+-- No crea usuarios de correo: para entrar al panel, crea el usuario en Supabase Auth y
+-- agrégalo al equipo como admin (ver el final de este archivo).
 
 insert into public.restaurantes (slug, nombre, lema, whatsapp, direccion, mapa_url, horario)
 values ('la-cocina-de-ana', 'La Cocina de Ana', 'Brunch, carnes y postres de casa', '573001112233',
@@ -46,12 +46,6 @@ join (values
 where r.slug = 'la-cocina-de-ana';
 
 
--- Para dar acceso al panel (cambia el correo por el del usuario que creaste en Auth):
--- insert into public.miembros (restaurante_id, usuario_id, rol)
--- select r.id, u.id, 'admin'
--- from public.restaurantes r, auth.users u
--- where r.slug = 'la-cocina-de-ana' and u.email = 'tu-correo@ejemplo.com';
-
 -- Mesas: ambiente "Salón" con las mesas 1 a 12 y una "Terraza" con 4 más.
 insert into public.ambientes (restaurante_id, nombre, orden)
 select r.id, a.nombre, a.orden
@@ -68,3 +62,19 @@ join (
   select 'Terraza', 'T' || n, 100 + n from generate_series(1, 4) as n
 ) as m on m.ambiente = a.nombre
 where r.slug = 'la-cocina-de-ana';
+
+-- Equipo de ejemplo. Los PIN son de prueba: cámbialos desde el panel en un restaurante real.
+--   Pedro (mesero) 1111 · Lucía (mesera) 2222 · Cocina 3333
+insert into public.equipo (restaurante_id, nombre, rol, pin_hash)
+select r.id, e.nombre, e.rol, extensions.crypt(e.pin, extensions.gen_salt('bf', 8))
+from public.restaurantes r,
+     (values ('Pedro', 'mesero', '1111'), ('Lucía', 'mesero', '2222'), ('Cocina', 'cocina', '3333')) as e (nombre, rol, pin)
+where r.slug = 'la-cocina-de-ana';
+
+-- Para entrar al panel: crea el usuario en Supabase Auth y agrégalo como admin
+-- (cambia el correo y el nombre):
+-- insert into public.equipo (restaurante_id, nombre, rol, usuario_id)
+-- select r.id, 'Ana', 'admin', u.id
+-- from public.restaurantes r, auth.users u
+-- where r.slug = 'la-cocina-de-ana' and u.email = 'tu-correo@ejemplo.com';
+-- Luego asígnale un PIN desde el panel, en Equipo.

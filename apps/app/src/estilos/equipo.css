@@ -1,0 +1,31 @@
+/* Pantalla del equipo (celulares y tablets del restaurante). Se monta sobre la caja de
+   acceso (auth.css) y agrega el selector de persona y el teclado del PIN. */
+
+.equipo-codigo { font-family: var(--fuente-titulo); font-size: 1.4rem; letter-spacing: .14em; text-transform: uppercase; text-align: center; }
+
+.equipo-personas { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.equipo-persona {
+  display: grid; justify-items: center; gap: 4px; padding: 14px 8px;
+  border: 1px solid var(--linea); border-radius: var(--radio-md); background: var(--blanco);
+  cursor: pointer; transition: border-color .15s, transform .15s;
+}
+.equipo-persona:hover { border-color: var(--rojo-600); transform: translateY(-1px); }
+.equipo-persona__inicial {
+  width: 44px; height: 44px; border-radius: var(--radio-full); display: grid; place-items: center;
+  background: var(--degradado-iso); color: var(--blanco); font-family: var(--fuente-titulo); font-weight: 700; font-size: 1.15rem;
+}
+.equipo-persona__nombre { font-family: var(--fuente-titulo); font-weight: 600; color: var(--carbon-800); }
+.equipo-persona__rol { font-size: .75rem; color: var(--texto-suave); }
+
+.pin-puntos { display: flex; justify-content: center; gap: 14px; min-height: 18px; }
+.pin-puntos span { width: 14px; height: 14px; border-radius: var(--radio-full); border: 2px solid var(--carbon-600); }
+.pin-puntos span.lleno { background: var(--carbon-800); border-color: var(--carbon-800); }
+
+.pin-teclado { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pin-tecla {
+  height: 58px; border: 1px solid var(--linea); border-radius: var(--radio-md); background: var(--crema);
+  font-family: var(--fuente-titulo); font-size: 1.4rem; font-weight: 600; color: var(--carbon-800); cursor: pointer;
+}
+.pin-tecla:active { background: var(--naranja-100); }
+.pin-tecla:disabled { opacity: .5; }
+.pin-tecla--borrar { font-size: 1.2rem; color: var(--texto-suave); background: transparent; }

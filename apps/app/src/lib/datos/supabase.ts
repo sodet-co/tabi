@@ -212,10 +212,14 @@ function datosRestaurante(slug: string): DatosRestaurante {
 const instancias = new Map<string, DatosRestaurante>();
 
 export const fuenteSupabase: FuenteDatos = {
-  // RLS solo deja ver las filas de miembros del propio usuario; de ahí sale la lista.
+  // Los restaurantes donde el usuario es admin activo con su cuenta de correo. Se filtra
+  // por su id porque un admin también ve las filas del resto de su equipo.
   async misRestaurantes() {
+    const { data: sesion } = await supabase().auth.getUser();
+    if (!sesion.user) return [];
     const filas = revisar(
-      await supabase().from('miembros').select('restaurantes(*)'),
+      await supabase().from('equipo').select('restaurantes(*)')
+        .eq('usuario_id', sesion.user.id).eq('rol', 'admin').eq('activo', true),
       'No se pudieron cargar tus restaurantes'
     );
     return filas
