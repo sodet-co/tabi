@@ -21,6 +21,7 @@ import { Aviso } from '@/componentes/ui/aviso';
 const ENLACES = [
   { destino: '', texto: 'Dashboard' },
   { destino: '/menu', texto: 'Menú' },
+  { destino: '/mesas', texto: 'Mesas' },
   { destino: '/reportes', texto: 'Reportes' },
   { destino: '/equipo', texto: 'Equipo' },
   { destino: '/configuracion', texto: 'Configuración' }

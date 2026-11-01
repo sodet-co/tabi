@@ -109,6 +109,11 @@ export default function MenuAdmin() {
     aviso('Sección creada');
   }
 
+  async function cambiarCocina(seccion: Seccion, aCocina: boolean) {
+    await fuente.guardarSeccion({ id: seccion.id, aCocina });
+    recargar();
+  }
+
   async function cambiarVisibilidad(seccion: Seccion, activa: boolean) {
     await fuente.guardarSeccion({ id: seccion.id, activa });
     recargar();
@@ -178,7 +183,7 @@ export default function MenuAdmin() {
         </form>
         <div className="tabla-envoltura">
           <table className="tabla">
-            <thead><tr><th>Nombre</th><th>Platos</th><th>Visible en la carta</th><th></th></tr></thead>
+            <thead><tr><th>Nombre</th><th>Platos</th><th>Visible en la carta</th><th>Pasa por cocina</th><th></th></tr></thead>
             <tbody>
               {secciones.map((seccion) => (
                 <tr key={seccion.id}>
@@ -187,6 +192,10 @@ export default function MenuAdmin() {
                   <td><label className="interruptor">
                     <input type="checkbox" checked={seccion.activa} onChange={(e) => cambiarVisibilidad(seccion, e.target.checked)} />
                     <span className="texto-pequeno texto-suave">{seccion.activa ? 'Visible' : 'Oculta'}</span>
+                  </label></td>
+                  <td><label className="interruptor" title="Si no pasa por cocina (bebidas…), la cocina no lo ve y el mesero lo lleva directo">
+                    <input type="checkbox" checked={seccion.aCocina ?? true} onChange={(e) => cambiarCocina(seccion, e.target.checked)} />
+                    <span className="texto-pequeno texto-suave">{(seccion.aCocina ?? true) ? 'Sí' : 'No, la lleva el mesero'}</span>
                   </label></td>
                   <td><div className="tabla__acciones">
                     <button className="boton boton--peligro boton--pequeno" onClick={() => borrarSeccion(seccion)}>Borrar</button>

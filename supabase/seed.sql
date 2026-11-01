@@ -19,6 +19,10 @@ from public.restaurantes r,
        ('Adiciones', 6)) as s (nombre, orden)
 where r.slug = 'la-cocina-de-ana';
 
+-- Las bebidas las sirve el mesero: no le aparecen a la cocina.
+update public.secciones set a_cocina = false
+ where nombre = 'Bebidas' and restaurante_id = (select id from public.restaurantes where slug = 'la-cocina-de-ana');
+
 insert into public.productos (restaurante_id, seccion_id, nombre, descripcion, precio_centavos, disponible)
 select r.id, s.id, p.nombre, p.descripcion, p.precio, p.disponible
 from public.restaurantes r

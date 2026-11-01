@@ -19,6 +19,8 @@ export type Seccion = {
   nombre: string;
   orden: number;
   activa: boolean;
+  // false: la cocina no lo ve (bebidas…); el mesero lo lleva directo.
+  aCocina?: boolean;
 };
 
 export type Producto = {

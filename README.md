@@ -37,6 +37,13 @@ cifrado, los celulares vinculados y los turnos. Cada celular entra con una sesi�
 Supabase: hay que tener activado **Authentication → Sign In / Providers → Allow anonymous
 sign-ins** en el proyecto. El celular se vincula una vez en `/equipo` con el código que genera el
 panel en Equipo, y cada persona inicia turno con su PIN.
+Cada mesa tiene un QR (y opcionalmente un NFC) que lleva a `/m/<código>`: el comensal ve la carta y,
+con el código de 4 dígitos que le da el mesero, su cuenta y los botones para llamar al mesero o
+pedir la cuenta. Los QR se imprimen desde el panel, en Mesas.
+Quien inicia turno con rol cocina en `/equipo` ve la pantalla de cocina: una tarjeta por comanda
+(cada vez que un mesero marcha), y cada plato pasa de por preparar a preparando y a listo. El mesero
+ve lo listo en su sala y lo marca entregado. Las secciones marcadas en el Menú como "no pasa por
+cocina" (las bebidas, en el seed) no le aparecen a la cocina.
 `supabase/seed.sql` carga "La Cocina de Ana" con su carta y 16 mesas (salón y terraza). También crea un equipo de ejemplo:
 Pedro (1111), Lucía (2222) y Cocina (3333).
 

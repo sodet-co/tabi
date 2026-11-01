@@ -21,7 +21,7 @@ const aRestaurante = (fila: Fila): Restaurante => ({
   horario: fila.horario || ''
 });
 
-const aSeccion = (fila: Fila): Seccion => ({ id: fila.id, nombre: fila.nombre, orden: fila.orden, activa: fila.activa });
+const aSeccion = (fila: Fila): Seccion => ({ id: fila.id, nombre: fila.nombre, orden: fila.orden, activa: fila.activa, aCocina: fila.a_cocina ?? true });
 
 const aProducto = (fila: Fila): Producto => ({
   id: fila.id,
@@ -98,10 +98,11 @@ function datosRestaurante(slug: string): DatosRestaurante {
     async guardarSeccion(seccion) {
       const id = await restauranteId();
       if (seccion.id) {
-        const campos: Partial<Seccion> = {};
+        const campos: Fila = {};
         if (seccion.nombre !== undefined) campos.nombre = seccion.nombre;
         if (seccion.activa !== undefined) campos.activa = seccion.activa;
         if (seccion.orden !== undefined) campos.orden = seccion.orden;
+        if (seccion.aCocina !== undefined) campos.a_cocina = seccion.aCocina;
         revisar(await supabase().from('secciones').update(campos).eq('id', seccion.id), 'No se pudo actualizar la sección');
         return seccion;
       }

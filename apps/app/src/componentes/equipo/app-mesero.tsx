@@ -9,10 +9,12 @@ import type { EstadoDispositivo } from '@/lib/equipo/dispositivo';
 import {
   abrirMesa, agregarItems, anularItem, cargarCarta, cargarCerradas, cargarSala, cerrarMesa, reabrirMesa, dividirItem, escucharSala,
   juntarCuentas, moverItems, nuevaCuenta, pedirCuenta, quitarItem, totalDe,
-  type Cuenta, type Item, type Mesa, type Ocupacion, type Producto, type Sala, type Seccion
+  atenderLlamado, entregarItems, type Cuenta, type Item, type Llamado, type Mesa, type Ocupacion, type Producto, type Sala, type Seccion
 } from '@/lib/equipo/mesero';
 import { aviso } from '@/componentes/ui/aviso';
 import { ModalPin } from './teclado-pin';
+import { minutos, useAhora } from './tiempo';
+import { AppCocina } from './app-cocina';
 
 // Lo que espera el PIN. ejecutar puede devolver otro paso (anular pide dos PIN).
 type Paso = {
@@ -31,33 +33,135 @@ const ESTADO_ITEM: Record<Item['estado'], { texto: string; clase: string }> = {
   anulado: { texto: 'Anulado', clase: 'pastilla pastilla--off' }
 };
 
-// Minutos que lleva abierta una mesa; se refresca cada 30 segundos.
-function useAhora() {
-  const [ahora, setAhora] = useState(() => Date.now());
-  useEffect(() => {
-    const reloj = setInterval(() => setAhora(Date.now()), 30_000);
-    return () => clearInterval(reloj);
-  }, []);
-  return ahora;
-}
-const minutos = (desde: string, ahora: number) => {
-  const m = Math.max(0, Math.floor((ahora - new Date(desde).getTime()) / 60_000));
-  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`;
-};
+// Lo que no pasa por cocina (bebidas…) no está "por preparar": está por llevar.
+const estadoItem = (i: Item) =>
+  i.estado === 'pendiente' && !i.aCocina ? { texto: 'Por llevar', clase: 'pastilla pastilla--off' } : ESTADO_ITEM[i.estado];
 const consecutivo = (n: number) => `#${String(n).padStart(4, '0')}`;
 
+/* Llamados de los comensales --------------------------------------------------------------- */
+// Aviso arriba de la sala (todas las mesas) o del detalle (solo esa mesa). Atender no pide PIN.
+function Llamados({ sala, llamados, alAtender, alIrAMesa }: {
+  sala: Sala; llamados: Llamado[]; alAtender: () => void; alIrAMesa?: (mesaId: string) => void;
+}) {
+  const ahora = useAhora();
+  const [atendiendo, setAtendiendo] = useState<string | null>(null);
+  if (!llamados.length) return null;
+
+  const mesaDe = (l: Llamado) => {
+    const o = sala.ocupaciones.find((x) => x.id === l.ocupacionId);
+    return sala.mesas.find((m) => m.id === o?.mesaId);
+  };
+
+  async function atender(l: Llamado) {
+    setAtendiendo(l.id);
+    try {
+      await atenderLlamado(l.id);
+      alAtender();
+    } catch (e) {
+      aviso((e as Error).message);
+    } finally {
+      setAtendiendo(null);
+    }
+  }
+
+  return (
+    <ul className="llamados" aria-label="Llamados de las mesas">
+      {llamados.map((l) => {
+        const mesa = mesaDe(l);
+        return (
+          <li key={l.id} className={`llamado llamado--${l.motivo}`}>
+            <span className="llamado__icono" aria-hidden="true">{l.motivo === 'cuenta' ? '$' : '🔔'}</span>
+            <button className="llamado__texto" disabled={!alIrAMesa || !mesa} onClick={() => mesa && alIrAMesa?.(mesa.id)}>
+              <strong>Mesa {mesa?.nombre ?? '?'}</strong> {l.motivo === 'cuenta' ? 'pide la cuenta' : 'llama al mesero'}
+              <span> · hace {minutos(l.creadoEn, ahora)}</span>
+            </button>
+            <button className="boton boton--pequeno" onClick={() => atender(l)} disabled={atendiendo === l.id}>
+              {atendiendo === l.id ? '…' : 'Atender'}
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/* Lo que la cocina dejó listo ------------------------------------------------------------ */
+// Una fila por mesa con lo que hay que llevarle. "Entregado" no pide PIN.
+function PorLlevar({ sala, ocupacionId, alEntregar, alIrAMesa }: {
+  sala: Sala; ocupacionId?: string; alEntregar: () => void; alIrAMesa?: (mesaId: string) => void;
+}) {
+  const ahora = useAhora();
+  const [entregando, setEntregando] = useState<string | null>(null);
+  const filas = sala.ocupaciones
+    .filter((o) => !ocupacionId || o.id === ocupacionId)
+    .map((o) => {
+      const cuentas = new Set(sala.cuentas.filter((c) => c.ocupacionId === o.id).map((c) => c.id));
+      // Un plato dividido es uno solo para llevar.
+      const vistos = new Set<string>();
+      const listos = sala.items.filter((i) => {
+        if (!cuentas.has(i.cuentaId) || i.estado !== 'listo') return false;
+        if (!i.divisionId) return true;
+        if (vistos.has(i.divisionId)) return false;
+        vistos.add(i.divisionId);
+        return true;
+      });
+      return { ocupacion: o, mesa: sala.mesas.find((m) => m.id === o.mesaId), listos };
+    })
+    .filter((f) => f.listos.length > 0);
+  if (!filas.length) return null;
+
+  async function entregar(ocupacion: string, ids: string[]) {
+    setEntregando(ocupacion);
+    try {
+      await entregarItems(ids);
+      alEntregar();
+    } catch (e) {
+      aviso((e as Error).message);
+    } finally {
+      setEntregando(null);
+    }
+  }
+
+  return (
+    <ul className="llamados" aria-label="Listo para llevar">
+      {filas.map(({ ocupacion, mesa, listos }) => {
+        const desde = listos.map((i) => i.actualizadoEn).sort()[0];
+        return (
+          <li key={ocupacion.id} className="llamado llamado--listo">
+            <span className="llamado__icono" aria-hidden="true">✓</span>
+            <button className="llamado__texto" disabled={!alIrAMesa || !mesa} onClick={() => mesa && alIrAMesa?.(mesa.id)}>
+              <strong>Mesa {mesa?.nombre ?? '?'}</strong>{' '}
+              {listos.map((i) => `${i.cantidad > 1 ? `${i.cantidad}× ` : ''}${i.nombre}`).join(', ')}
+              <span> · listo hace {minutos(desde, ahora)}</span>
+            </button>
+            <button className="boton boton--pequeno" disabled={entregando === ocupacion.id}
+              onClick={() => entregar(ocupacion.id, listos.map((i) => i.id))}>
+              {entregando === ocupacion.id ? '…' : 'Entregado'}
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /* Sala ------------------------------------------------------------------------------------ */
-function VistaSala({ sala, alElegir }: { sala: Sala; alElegir: (mesa: Mesa) => void }) {
+function VistaSala({ sala, alElegir, alAtender }: { sala: Sala; alElegir: (mesa: Mesa) => void; alAtender: () => void }) {
   const ahora = useAhora();
   const ocupacionDe = (mesaId: string) => sala.ocupaciones.find((o) => o.mesaId === mesaId);
   const totalOcupacion = (o: Ocupacion) => {
     const cuentas = new Set(sala.cuentas.filter((c) => c.ocupacionId === o.id).map((c) => c.id));
     return totalDe(sala.items.filter((i) => cuentas.has(i.cuentaId)));
   };
+  const llama = (o?: Ocupacion) => Boolean(o) && sala.llamados.some((l) => l.ocupacionId === o!.id);
   const abiertas = sala.ocupaciones.length;
 
   return (
     <div className="sala">
+      <Llamados sala={sala} llamados={sala.llamados} alAtender={alAtender}
+        alIrAMesa={(id) => { const m = sala.mesas.find((x) => x.id === id); if (m) alElegir(m); }} />
+      <PorLlevar sala={sala} alEntregar={alAtender}
+        alIrAMesa={(id) => { const m = sala.mesas.find((x) => x.id === id); if (m) alElegir(m); }} />
       <p className="sala__resumen">{abiertas} de {sala.mesas.length} mesas ocupadas</p>
       {sala.ambientes.map((ambiente) => {
         const mesas = sala.mesas.filter((m) => m.ambienteId === ambiente.id);
@@ -69,8 +173,10 @@ function VistaSala({ sala, alElegir }: { sala: Sala; alElegir: (mesa: Mesa) => v
               {mesas.map((mesa) => {
                 const o = ocupacionDe(mesa.id);
                 return (
-                  <button key={mesa.id} className={`mesa-tile ${o ? `mesa-tile--${o.estado}` : ''}`} onClick={() => alElegir(mesa)}>
+                  <button key={mesa.id} className={`mesa-tile ${o ? `mesa-tile--${o.estado}` : ''} ${llama(o) ? 'mesa-tile--llama' : ''}`}
+                    onClick={() => alElegir(mesa)}>
                     <span className="mesa-tile__nombre">{mesa.nombre}</span>
+                    {llama(o) && <span className="mesa-tile__campana" aria-label="Está llamando">🔔</span>}
                     {o ? (
                       <>
                         <span className="mesa-tile__total">{precio(totalOcupacion(o))}</span>
@@ -207,6 +313,21 @@ function HojaItem({ item, cuenta, cuentas, sala, nombreMesa, conPin, alCambiar, 
     }
   });
 
+  const [entregando, setEntregando] = useState(false);
+  async function entregar() {
+    setEntregando(true);
+    try {
+      await entregarItems([item.id]);
+      aviso(`${item.nombre} entregado`);
+      alCambiar();
+      alCerrar();
+    } catch (e) {
+      aviso((e as Error).message);
+      setEntregando(false);
+    }
+  }
+  const porEntregar = item.estado === 'listo' || (!item.aCocina && item.estado === 'pendiente');
+
   const [quitando, setQuitando] = useState(false);
   async function quitar() {
     setQuitando(true);
@@ -249,6 +370,12 @@ function HojaItem({ item, cuenta, cuentas, sala, nombreMesa, conPin, alCambiar, 
           </div>
           <button className="boton boton--fantasma boton--pequeno" onClick={alCerrar}>Cerrar</button>
         </div>
+
+        {porEntregar && (
+          <button className="boton boton--marca boton--bloque" onClick={entregar} disabled={entregando}>
+            {entregando ? 'Marcando…' : 'Ya lo llevé a la mesa'}
+          </button>
+        )}
 
         {otras.length > 0 && (
           <section className="hoja__seccion">
@@ -293,7 +420,9 @@ function HojaItem({ item, cuenta, cuentas, sala, nombreMesa, conPin, alCambiar, 
         {item.estado === 'pendiente' ? (
           <section className="hoja__seccion">
             <h3>Quitar</h3>
-            <p className="texto-pequeno texto-suave">La cocina todavía no lo empieza: se quita sin PIN y queda registrado a tu nombre.</p>
+            <p className="texto-pequeno texto-suave">
+              {item.aCocina ? 'La cocina todavía no lo empieza' : 'Todavía no se ha llevado a la mesa'}: se quita sin PIN y queda registrado a tu nombre.
+            </p>
             <div><button className="boton boton--peligro" onClick={quitar} disabled={quitando}>
               {quitando ? 'Quitando…' : `Quitar ${nombre}`}
             </button></div>
@@ -301,7 +430,9 @@ function HojaItem({ item, cuenta, cuentas, sala, nombreMesa, conPin, alCambiar, 
         ) : (
         <section className="hoja__seccion">
           <h3>Anular</h3>
-          <p className="texto-pequeno texto-suave">Ya salió a cocina: anularlo necesita tu PIN y el de un administrador.</p>
+          <p className="texto-pequeno texto-suave">
+            {item.aCocina ? 'Ya salió a cocina' : 'Ya se llevó a la mesa'}: anularlo necesita tu PIN y el de un administrador.
+          </p>
           {!admins.length ? (
             <p className="texto-pequeno texto-suave">Anular necesita el PIN de un administrador, y ninguno tiene PIN todavía.</p>
           ) : (
@@ -366,6 +497,9 @@ function DetalleMesa({ sala, mesa, conPin, carta, recargar, alVolver }: {
         <p className="detalle__total">{precio(total)}</p>
       </div>
 
+      <Llamados sala={sala} llamados={sala.llamados.filter((l) => l.ocupacionId === ocupacion.id)} alAtender={recargar} />
+      <PorLlevar sala={sala} ocupacionId={ocupacion.id} alEntregar={recargar} />
+
       {cuentas.map((cuenta) => {
         const items = itemsDe(cuenta);
         return (
@@ -385,7 +519,7 @@ function DetalleMesa({ sala, mesa, conPin, carta, recargar, alVolver }: {
                         {i.divisionId && <span className="item__parte"> · 1/{i.partes}</span>}
                         {i.nota && <span className="item__nota">{i.nota}</span>}
                       </span>
-                      <span className={ESTADO_ITEM[i.estado].clase}>{ESTADO_ITEM[i.estado].texto}</span>
+                      <span className={estadoItem(i).clase}>{estadoItem(i).texto}</span>
                       <span className="item__precio">{precio(i.subtotal)}</span>
                     </button>
                   </li>
@@ -502,7 +636,7 @@ function Cerradas({ restauranteId, sala, conPin, alReabrir }: {
                             {i.divisionId && <span className="item__parte"> · 1/{i.partes}</span>}
                             {i.nota && <span className="item__nota">{i.nota}</span>}
                           </span>
-                          <span className={ESTADO_ITEM[i.estado].clase}>{ESTADO_ITEM[i.estado].texto}</span>
+                          <span className={estadoItem(i).clase}>{estadoItem(i).texto}</span>
                           <span className="item__precio">{precio(i.subtotal)}</span>
                         </li>
                       ))}
@@ -533,7 +667,8 @@ export function AppMesero({ estado }: { estado: EstadoDispositivo }) {
   const [carta, setCarta] = useState<{ secciones: Seccion[]; productos: Producto[] } | null>(null);
   const [mesaId, setMesaId] = useState<string | null>(null);
   const [paso, setPaso] = useState<Paso | null>(null);
-  const [vista, setVista] = useState<'sala' | 'cerradas'>('sala');
+  const [vista, setVista] = useState<'sala' | 'cerradas' | 'cocina'>('sala');
+  const esAdmin = estado.turno?.rol === 'admin';
 
   const cargar = useCallback(() => {
     cargarSala(restauranteId).then((s) => { setSala(s); setError(''); }).catch((e: Error) => setError(e.message));
@@ -585,9 +720,15 @@ export function AppMesero({ estado }: { estado: EstadoDispositivo }) {
               onClick={() => setVista('sala')}>Sala</button>
             <button role="tab" aria-selected={vista === 'cerradas'} className={`chip ${vista === 'cerradas' ? 'activo' : ''}`}
               onClick={() => setVista('cerradas')}>Cerradas hoy</button>
+            {esAdmin && (
+              <button role="tab" aria-selected={vista === 'cocina'} className={`chip ${vista === 'cocina' ? 'activo' : ''}`}
+                onClick={() => setVista('cocina')}>Cocina</button>
+            )}
           </div>
           {vista === 'sala'
-            ? <VistaSala sala={sala} alElegir={elegir} />
+            ? <VistaSala sala={sala} alElegir={elegir} alAtender={cargar} />
+            : vista === 'cocina'
+            ? <AppCocina estado={estado} />
             : <Cerradas restauranteId={restauranteId} sala={sala} conPin={setPaso}
                 alReabrir={(id) => { setVista('sala'); setMesaId(id); }} />}
         </>

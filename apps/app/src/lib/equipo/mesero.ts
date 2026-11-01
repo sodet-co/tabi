@@ -17,14 +17,18 @@ export type Cuenta = { id: string; ocupacionId: string; particion: string; estad
 export type Item = {
   id: string; cuentaId: string; nombre: string; precio: number; cantidad: number; subtotal: number;
   divisionId: string | null; partes: number; nota: string; estado: EstadoItem; agregadoPor: string | null;
+  // creadoEn identifica la marcha (comanda); aCocina dice si la cocina lo prepara.
+  creadoEn: string; actualizadoEn: string; anuladoEn: string | null; aCocina: boolean;
 };
 export type PersonaEquipo = { id: string; nombre: string; rol: string; tienePin: boolean };
 export type Seccion = { id: string; nombre: string };
 export type Producto = { id: string; seccionId: string; nombre: string; precio: number; disponible: boolean };
 
+export type Llamado = { id: string; ocupacionId: string; motivo: 'mesero' | 'cuenta'; creadoEn: string };
+
 export type Sala = {
   ambientes: Ambiente[]; mesas: Mesa[]; ocupaciones: Ocupacion[]; cuentas: Cuenta[]; items: Item[];
-  equipo: PersonaEquipo[];
+  equipo: PersonaEquipo[]; llamados: Llamado[];
 };
 
 function revisar<T>({ data, error }: { data: T | null; error: { message: string } | null }, mensaje: string): T {
@@ -52,9 +56,15 @@ async function cuentasEItems(ocupacionIds: string[]) {
     : [];
   const items = cuentas.length
     ? revisar(await db.from('cuenta_items')
-      .select('id, cuenta_id, nombre, precio_centavos, cantidad, subtotal_centavos, division_id, nota, estado, agregado_por, creado_en')
+      .select('id, cuenta_id, seccion_id, nombre, precio_centavos, cantidad, subtotal_centavos, division_id, nota, estado, agregado_por, creado_en, actualizado_en, anulado_en')
       .in('cuenta_id', cuentas.map((c) => c.id)).order('creado_en'), 'No se pudieron cargar los productos')
     : [];
+
+  // Secciones que no pasan por cocina (bebidas…): las entrega el mesero directo.
+  const seccionIds = [...new Set(items.map((i) => i.seccion_id).filter(Boolean))];
+  const sinCocina = new Set(seccionIds.length
+    ? revisar(await db.from('secciones').select('id').in('id', seccionIds).eq('a_cocina', false), 'No se pudo cargar la carta').map((s) => s.id)
+    : []);
 
   // Cuántas partes tiene cada plato dividido (para mostrar "1/3").
   const partes = new Map<string, number>();
@@ -65,18 +75,20 @@ async function cuentasEItems(ocupacionIds: string[]) {
     items: items.map((i): Item => ({
       id: i.id, cuentaId: i.cuenta_id, nombre: i.nombre, precio: i.precio_centavos, cantidad: i.cantidad,
       subtotal: i.subtotal_centavos, divisionId: i.division_id, partes: i.division_id ? partes.get(i.division_id) ?? 1 : 1,
-      nota: i.nota ?? '', estado: i.estado, agregadoPor: i.agregado_por
+      nota: i.nota ?? '', estado: i.estado, agregadoPor: i.agregado_por,
+      creadoEn: i.creado_en, actualizadoEn: i.actualizado_en, anuladoEn: i.anulado_en, aCocina: !sinCocina.has(i.seccion_id)
     }))
   };
 }
 
 export async function cargarSala(restauranteId: string): Promise<Sala> {
   const db = clienteDispositivo();
-  const [ambientes, mesas, ocupaciones, equipo] = await Promise.all([
+  const [ambientes, mesas, ocupaciones, equipo, llamados] = await Promise.all([
     db.from('ambientes').select('id, nombre, orden').eq('restaurante_id', restauranteId).order('orden'),
     db.from('mesas').select('id, ambiente_id, nombre, orden').eq('restaurante_id', restauranteId).eq('activa', true).order('orden'),
     db.from('ocupaciones').select(COLUMNAS_OCUPACION).eq('restaurante_id', restauranteId).neq('estado', 'cerrada'),
-    db.from('equipo').select('id, nombre, rol, tiene_pin').eq('restaurante_id', restauranteId).eq('activo', true).order('nombre')
+    db.from('equipo').select('id, nombre, rol, tiene_pin').eq('restaurante_id', restauranteId).eq('activo', true).order('nombre'),
+    db.from('llamados').select('id, ocupacion_id, motivo, creado_en').eq('restaurante_id', restauranteId).is('atendido_en', null).order('creado_en')
   ]);
   const activas = revisar(ocupaciones, 'No se pudieron cargar las mesas abiertas').map(aOcupacion);
 
@@ -85,7 +97,8 @@ export async function cargarSala(restauranteId: string): Promise<Sala> {
     mesas: revisar(mesas, 'No se pudieron cargar las mesas').map((m) => ({ id: m.id, ambienteId: m.ambiente_id, nombre: m.nombre, orden: m.orden })),
     ocupaciones: activas,
     ...(await cuentasEItems(activas.map((o) => o.id))),
-    equipo: revisar(equipo, 'No se pudo cargar el equipo').map((e) => ({ id: e.id, nombre: e.nombre, rol: e.rol, tienePin: e.tiene_pin }))
+    equipo: revisar(equipo, 'No se pudo cargar el equipo').map((e) => ({ id: e.id, nombre: e.nombre, rol: e.rol, tienePin: e.tiene_pin })),
+    llamados: revisar(llamados, 'No se pudieron cargar los llamados').map((l) => ({ id: l.id, ocupacionId: l.ocupacion_id, motivo: l.motivo, creadoEn: l.creado_en }))
   };
 }
 
@@ -125,7 +138,7 @@ export function escucharSala(restauranteId: string, alCambiar: () => void) {
   const avisar = () => { clearTimeout(espera); espera = setTimeout(alCambiar, 250); };
   const filtro = `restaurante_id=eq.${restauranteId}`;
   let canal = db.channel(`sala-${restauranteId}`);
-  for (const tabla of ['mesas', 'ocupaciones', 'cuentas', 'cuenta_items', 'equipo']) {
+  for (const tabla of ['mesas', 'ocupaciones', 'cuentas', 'cuenta_items', 'equipo', 'llamados']) {
     canal = canal
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: tabla, filter: filtro }, avisar)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: tabla, filter: filtro }, avisar);
@@ -139,7 +152,7 @@ export function escucharSala(restauranteId: string, alCambiar: () => void) {
   return () => { clearTimeout(espera); clearInterval(respaldo); db.removeChannel(canal); };
 }
 
-/* Acciones (todas con PIN) ---------------------------------------------------------- */
+/* Acciones ---------------------------------------------------------- */
 type Respuesta = { ok: boolean; error?: string; [clave: string]: unknown };
 
 async function accion(funcion: string, argumentos: Record<string, unknown>) {
@@ -180,6 +193,19 @@ export const pedirCuenta = (ocupacionId: string, pin: string) =>
 
 export const reabrirMesa = (ocupacionId: string, pin: string) =>
   accion('reabrir_mesa', { p_ocupacion_id: ocupacionId, p_pin: pin }) as Promise<Respuesta & { mesa_id: string }>;
+
+// Atender un llamado no toca cuentas: no pide PIN.
+export const atenderLlamado = (llamadoId: string) =>
+  clienteDispositivo().rpc('atender_llamado', { p_llamado_id: llamadoId }).then(({ error }) => {
+    if (error) throw new Error(error.message || 'No se pudo marcar el llamado');
+  });
+
+// Llevar a la mesa no toca plata: no pide PIN. Las partes de un plato dividido van juntas.
+export const entregarItems = (itemIds: string[]) => accion('entregar_items', { p_item_ids: itemIds });
+
+// La cocina mueve platos (pendiente → preparando → listo) sin PIN.
+export const cambiarEstadoCocina = (itemIds: string[], estado: 'pendiente' | 'preparando' | 'listo') =>
+  accion('cambiar_estado_cocina', { p_item_ids: itemIds, p_estado: estado });
 
 export const cerrarMesa = (ocupacionId: string, pin: string) =>
   accion('cerrar_mesa', { p_ocupacion_id: ocupacionId, p_pin: pin });

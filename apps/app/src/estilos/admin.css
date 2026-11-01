@@ -98,3 +98,34 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: .875rem; }
 .vincular__qr.vencido { opacity: .25; }
 .vincular__texto { display: grid; gap: 8px; flex: 1; min-width: 220px; }
 .vincular__codigo { font-family: var(--fuente-titulo); font-size: 2rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--carbon-800); }
+
+/* Mesas */
+.ambiente-nombre, .mesa-nombre {
+  border: 1px solid transparent; border-radius: var(--radio-sm); padding: 6px 8px; background: transparent;
+  font-family: var(--fuente-titulo); font-weight: 600; color: var(--carbon-800);
+}
+.ambiente-nombre { font-size: 1.05rem; }
+.ambiente-nombre:hover, .mesa-nombre:hover { border-color: var(--linea); }
+.ambiente-nombre:focus, .mesa-nombre:focus { border-color: var(--naranja-500); background: var(--blanco); }
+.mesa-nombre { width: 110px; }
+.qr-mini { display: block; width: 56px; height: 56px; }
+.qr-mini svg { width: 100%; height: 100%; }
+.mesa-inactiva { opacity: .55; }
+
+/* Hoja de QR para imprimir: solo existe en papel */
+.impresion-qr { display: none; }
+@media print {
+  @page { margin: 12mm; }
+  .nav, .panel > :not(.impresion-qr), .aviso { display: none !important; }
+  .admin, .panel { background: #fff; padding: 0; margin: 0; max-width: none; }
+  .impresion-qr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8mm; }
+  .qr-tarjeta {
+    break-inside: avoid; border: 1px dashed #999; border-radius: 4mm; padding: 6mm 4mm;
+    display: grid; justify-items: center; gap: 2mm; text-align: center;
+  }
+  .qr-tarjeta__restaurante { font-size: 10pt; color: #555; }
+  .qr-tarjeta__mesa { font-family: var(--fuente-titulo); font-size: 20pt; font-weight: 700; }
+  .qr-tarjeta__codigo { width: 42mm; height: 42mm; }
+  .qr-tarjeta__codigo svg { width: 100%; height: 100%; }
+  .qr-tarjeta__texto { font-size: 9pt; color: #555; }
+}

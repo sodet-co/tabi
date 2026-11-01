@@ -169,3 +169,79 @@
 .cuenta--lectura { background: var(--crema); }
 .item--lectura { cursor: default; }
 .item--lectura:hover { background: none; }
+
+/* Llamados de los comensales */
+.llamados { list-style: none; padding: 0; display: grid; gap: 8px; }
+.llamado {
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+  padding: 10px 12px; border-radius: var(--radio-md); background: var(--rojo-050); border: 1px solid var(--rojo-600);
+  animation: llegar .3s ease-out;
+}
+.llamado--cuenta { background: rgba(183, 121, 31, .1); border-color: var(--ambar); }
+.llamado__icono { font-size: 1.15rem; width: 1.5em; text-align: center; font-weight: 700; color: var(--ambar); }
+.llamado__texto { border: 0; background: none; text-align: left; font-size: .9rem; color: var(--carbon-800); cursor: pointer; padding: 0; }
+.llamado__texto:disabled { cursor: default; }
+.llamado__texto span { color: var(--texto-suave); font-size: .8rem; }
+@keyframes llegar { from { transform: translateY(-6px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.mesa-tile { position: relative; }
+.mesa-tile__campana { position: absolute; top: 8px; right: 8px; font-size: 1rem; animation: sonar 1.2s ease-in-out infinite; }
+.mesa-tile--llama { box-shadow: 0 0 0 2px var(--rojo-600); }
+@keyframes sonar { 0%, 60%, 100% { transform: rotate(0); } 10%, 30% { transform: rotate(14deg); } 20%, 40% { transform: rotate(-14deg); } }
+@media (prefers-reduced-motion: reduce) { .llamado, .mesa-tile__campana { animation: none; } }
+
+/* Lo que la cocina dejó listo (en la sala del mesero) */
+.llamado--listo { background: rgba(27, 138, 95, .08); border-color: var(--verde); }
+.llamado--listo .llamado__icono { color: var(--verde); }
+
+/* Cocina: una tarjeta por comanda, la más vieja primero */
+.turno__contenido--ancho { max-width: 1600px; }
+.cocina { display: grid; gap: 16px; }
+.cocina__barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cocina__comandas { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; align-items: start; }
+.cocina__vacio { padding: 48px 16px; text-align: center; color: var(--texto-suave); border: 2px dashed var(--linea); border-radius: var(--radio-lg); }
+
+.comanda {
+  display: grid; gap: 10px; padding: 14px; border-radius: var(--radio-md); background: var(--blanco);
+  border: 1px solid var(--linea); border-top: 6px solid var(--carbon-600); box-shadow: var(--sombra);
+  animation: llegar .3s ease-out;
+}
+.comanda[aria-busy='true'] { opacity: .7; }
+.comanda--tarde { border-top-color: var(--ambar); }
+.comanda--muy-tarde { border-top-color: var(--rojo-600); }
+.comanda__cabecera { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.comanda__cabecera h2 { font-size: 1.25rem; color: var(--carbon-800); margin-right: auto; }
+.comanda__reloj { font-family: var(--fuente-titulo); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--carbon-600); }
+.comanda--tarde .comanda__reloj { color: var(--ambar); }
+.comanda--muy-tarde .comanda__reloj { color: var(--rojo-600); }
+.comanda__mesero { width: 100%; font-size: .8rem; color: var(--texto-suave); }
+.comanda__lineas { list-style: none; padding: 0; display: grid; gap: 6px; }
+
+.plato {
+  width: 100%; display: grid; grid-template-columns: 2.2em 1fr auto; gap: 10px; align-items: center;
+  padding: 10px; border: 1px solid var(--linea); border-radius: var(--radio-sm); background: var(--crema);
+  text-align: left; color: var(--carbon-800); cursor: pointer; font-size: 1rem;
+}
+.plato:disabled { cursor: default; }
+.plato__cantidad { font-family: var(--fuente-titulo); font-weight: 700; font-size: 1.2rem; text-align: center; }
+.plato__nombre { display: grid; font-weight: 600; min-width: 0; }
+.plato__partes { font-weight: 400; font-size: .8rem; color: var(--texto-suave); }
+.plato__nota { font-weight: 600; font-size: .85rem; color: var(--rojo-700); }
+.plato__estado { font-size: .75rem; font-weight: 600; color: var(--texto-suave); text-transform: uppercase; letter-spacing: .04em; }
+.plato--preparando { background: var(--naranja-050); border-color: var(--naranja-500); }
+.plato--preparando .plato__estado { color: var(--naranja-500); }
+.plato--listo, .plato--entregado { background: rgba(27, 138, 95, .08); border-color: var(--verde); }
+.plato--listo .plato__estado, .plato--entregado .plato__estado { color: var(--verde); }
+.plato--listo .plato__nombre, .plato--entregado .plato__nombre { text-decoration: line-through; text-decoration-color: var(--verde); }
+.plato--anulado { background: var(--rojo-050); border-color: var(--rojo-600); cursor: default; }
+.plato--anulado .plato__nombre { text-decoration: line-through; }
+.plato--anulado .plato__estado { color: var(--rojo-600); }
+
+.cocina__listas { display: grid; gap: 8px; }
+.cocina__listas h2 { font-size: .95rem; color: var(--carbon-600); }
+.cocina__listas ul { list-style: none; padding: 0; display: grid; gap: 6px; }
+.cocina__listas li {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 8px 12px; border-radius: var(--radio-sm); background: var(--blanco); border: 1px solid var(--linea); font-size: .9rem;
+}
+@media (prefers-reduced-motion: reduce) { .comanda { animation: none; } }

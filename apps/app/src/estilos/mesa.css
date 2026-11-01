@@ -1,0 +1,34 @@
+/* El comensal en su mesa: carta sin carrito y el botón "Mi cuenta" */
+
+.mesa-etiqueta {
+  margin-left: auto; padding: 5px 12px; border-radius: var(--radio-full);
+  background: var(--naranja-050); color: var(--rojo-700); font-weight: 700; font-size: .8rem;
+}
+.mesa-chips { margin-bottom: 16px; }
+
+.boton-cuenta {
+  position: fixed; z-index: 35; right: max(16px, calc(50% - var(--ancho-movil) / 2 + 16px)); bottom: 18px;
+  display: inline-flex; align-items: center; gap: 10px; padding: 13px 18px; border: 0; border-radius: var(--radio-full);
+  background: var(--carbon-900); color: var(--blanco); box-shadow: var(--sombra-alta); cursor: pointer;
+  font-family: var(--fuente-titulo); font-weight: 600; font-size: .95rem;
+}
+.boton-cuenta strong { font-variant-numeric: tabular-nums; color: var(--naranja-100); }
+
+.mi-cuenta { display: grid; gap: 14px; }
+.mi-cuenta__cuenta { display: grid; gap: 6px; }
+.mi-cuenta__cuenta h3 { display: flex; justify-content: space-between; font-size: .95rem; color: var(--carbon-600); }
+.mi-cuenta__cuenta ul { list-style: none; padding: 0; display: grid; }
+.mi-cuenta__cuenta li {
+  display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center;
+  padding: 9px 0; border-top: 1px solid var(--linea); font-size: .9rem;
+}
+.mi-cuenta__cuenta li:first-child { border-top: 0; }
+.mi-cuenta__nombre { display: grid; min-width: 0; }
+.mi-cuenta__nombre small { font-size: .75rem; color: var(--texto-suave); font-style: italic; }
+.mi-cuenta__precio { font-variant-numeric: tabular-nums; font-weight: 600; }
+.mi-cuenta__total {
+  display: flex; justify-content: space-between; padding-top: 10px; border-top: 2px solid var(--carbon-800);
+  font-family: var(--fuente-titulo); font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.mi-cuenta__botones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mi-cuenta__aviso { background: var(--naranja-050); border-radius: var(--radio-md); padding: 14px; font-size: .9rem; color: var(--carbon-600); }

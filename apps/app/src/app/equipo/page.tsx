@@ -14,6 +14,7 @@ import {
 } from '@/lib/equipo/dispositivo';
 import { aviso } from '@/componentes/ui/aviso';
 import { AppMesero } from '@/componentes/equipo/app-mesero';
+import { AppCocina } from '@/componentes/equipo/app-cocina';
 import { TecladoPin } from '@/componentes/equipo/teclado-pin';
 
 const ROL: Record<Rol, string> = { mesero: 'Mesero', cocina: 'Cocina', admin: 'Administrador' };
@@ -121,10 +122,8 @@ function EnTurno({ estado, alTerminar }: { estado: EstadoDispositivo; alTerminar
           {terminando ? 'Terminando…' : 'Terminar turno'}
         </button>
       </header>
-      <main className="turno__contenido">
-        {turno.rol === 'cocina'
-          ? <p className="acceso-pista">Aquí vas a ver en vivo los platos por preparar. Esa pantalla llega en un próximo paso.</p>
-          : <AppMesero estado={estado} />}
+      <main className={`turno__contenido ${turno.rol === 'cocina' ? 'turno__contenido--ancho' : ''}`}>
+        {turno.rol === 'cocina' ? <AppCocina estado={estado} /> : <AppMesero estado={estado} />}
       </main>
     </div>
   );
