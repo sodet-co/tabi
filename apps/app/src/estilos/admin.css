@@ -137,3 +137,4 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: .875rem; }
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   padding: 10px 12px; border-radius: var(--radio-sm); background: rgba(183, 121, 31, .08);
 }
+.vincular__usado { padding: 12px 14px; border-radius: var(--radio-sm); background: var(--naranja-050); color: var(--carbon-600); font-size: .9rem; }

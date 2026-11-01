@@ -7,7 +7,7 @@ import QRCode from 'qrcode';
 import { CONFIG } from '@/lib/config';
 import {
   agregarPersona, cambiarActivo, cambiarRol, cargarEquipo, crearCodigoVinculacion,
-  aprobarDispositivo, escucharCambios, fijarPin, quitarDispositivo, type Persona
+  aprobarDispositivo, escucharCambios, fijarPin, quitarDispositivo, type Dispositivo, type Persona
 } from '@/lib/equipo/admin';
 import type { Rol } from '@/lib/equipo/dispositivo';
 import { fechaHora } from '@/lib/formato';
@@ -61,7 +61,9 @@ function ModalPin({ persona, alCerrar }: { persona: Persona; alCerrar: () => voi
   );
 }
 
-function Vincular({ restauranteId }: { restauranteId: string }) {
+// Al canjear el código, el celular aparece en la lista (vinculado_en lo pone la base).
+// Un celular vinculado después de crear el código es quien lo usó: el QR se desactiva.
+function Vincular({ restauranteId, dispositivos }: { restauranteId: string; dispositivos: Dispositivo[] }) {
   const [codigo, setCodigo] = useState<{ codigo: string; expira: number; qr: string; enlace: string } | null>(null);
   const [ahora, setAhora] = useState(() => Date.now());
 
@@ -85,6 +87,8 @@ function Vincular({ restauranteId }: { restauranteId: string }) {
 
   const restante = codigo ? Math.max(0, Math.round((codigo.expira - ahora) / 1000)) : 0;
   const vencido = Boolean(codigo) && restante === 0;
+  // El código dura 10 minutos: se creó 10 minutos antes de vencer (hora del servidor).
+  const usadoPor = codigo && dispositivos.find((d) => new Date(d.vinculadoEn).getTime() >= codigo.expira - 10 * 60_000);
 
   return (
     <section className="tarjeta bloque">
@@ -94,7 +98,12 @@ function Vincular({ restauranteId }: { restauranteId: string }) {
           {codigo ? 'Generar otro código' : 'Generar código'}
         </button>
       </div>
-      {!codigo ? (
+      {usadoPor ? (
+        <p className="vincular__usado">
+          <strong>{usadoPor.nombre}</strong> usó este código y ya no sirve.
+          {usadoPor.aprobado ? ' Ya está aprobado.' : ' Apruébalo aquí abajo, en "Esperando aprobación".'}
+        </p>
+      ) : !codigo ? (
         <p className="texto-pequeno texto-suave">
           Cada celular del equipo se vincula una sola vez. Genera un código y escanéalo desde el celular con la cámara.
         </p>
@@ -179,7 +188,7 @@ export default function Equipo() {
         <span className="texto-pequeno texto-suave">{turnos.length} {turnos.length === 1 ? 'persona' : 'personas'} en turno ahora</span>
       </div>
 
-      <Vincular restauranteId={datos.restauranteId} />
+      <Vincular restauranteId={datos.restauranteId} dispositivos={datos.dispositivos} />
 
       {pendientes.length > 0 && (
         <section className="tarjeta bloque pendientes" aria-live="polite">

@@ -4,6 +4,7 @@
 // 1. Sin vincular: se canjea el código que muestra el panel (una sola vez por aparato).
 // 2. Vinculado: la persona elige su nombre y pone su PIN para iniciar turno.
 // 3. En turno: el mesero ve la sala en vivo y trabaja sobre las mesas.
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { LogoTabi } from '@tabi/ui/logo';
@@ -69,6 +70,7 @@ function Vincular({ codigoInicial, alVincular }: { codigoInicial: string; alVinc
           {enviando ? 'Vinculando…' : 'Vincular'}
         </button>
       </form>
+      <p className="acceso-volver"><Link href="/login?admin">¿Eres administrador? Entrar al panel</Link></p>
     </Caja>
   );
 }
@@ -108,6 +110,7 @@ function ElegirPersona({ estado, alElegir }: { estado: EstadoDispositivo; alEleg
           ))}
         </div>
       )}
+      <p className="acceso-volver"><Link href="/login?admin">Entrar como administrador</Link></p>
     </Caja>
   );
 }

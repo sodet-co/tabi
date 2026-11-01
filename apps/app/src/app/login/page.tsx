@@ -6,18 +6,39 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { LogoTabi } from '@tabi/ui/logo';
 import { CONFIG } from '@/lib/config';
 import { sesion } from '@/lib/sesion';
+import { estadoDispositivo } from '@/lib/equipo/dispositivo';
 
 // En modo local (demo) se entra con un clic; con Supabase se piden correo y contraseña.
 const CON_CREDENCIALES = CONFIG.FUENTE === 'supabase';
+
+// La puerta de Tabi para todos. En un celular del equipo (vinculado, aprobado o esperando
+// aprobación) pasa directo a /equipo; con ?admin se queda aquí para entrar al panel. A
+// cualquier otro aparato solo le muestra el login del administrador: los nombres del
+// equipo nunca se ven sin un celular aprobado.
 
 export default function Login() {
   const router = useRouter();
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
 
-  // Si ya hay sesión, no tiene sentido mostrar el formulario.
+  const [listo, setListo] = useState(false);
+
   useEffect(() => {
-    sesion.activa().then((activa) => { if (activa) router.replace('/admin'); });
+    let vigente = true;
+    (async () => {
+      const comoAdmin = new URLSearchParams(window.location.search).has('admin');
+      if (CON_CREDENCIALES && !comoAdmin && (await estadoDispositivo().catch(() => null))) {
+        if (vigente) router.replace('/equipo');
+        return;
+      }
+      // Si ya hay sesión, no tiene sentido mostrar el formulario.
+      if (await sesion.activa()) {
+        if (vigente) router.replace('/admin');
+        return;
+      }
+      if (vigente) setListo(true);
+    })();
+    return () => { vigente = false; };
   }, [router]);
 
   async function entrar(evento: FormEvent<HTMLFormElement>) {
@@ -36,6 +57,8 @@ export default function Login() {
     }
     router.push('/admin');
   }
+
+  if (!listo) return <main className="acceso-caja" aria-busy="true" />;
 
   return (
     <main className="acceso-caja">
@@ -62,7 +85,7 @@ export default function Login() {
       </form>
 
       {!CON_CREDENCIALES && <p className="acceso-pista">Modo demo: entras directo, sin usuario ni contraseña.</p>}
-      <p className="acceso-volver"><Link href="/">Volver a la página principal</Link></p>
+      {CON_CREDENCIALES && <p className="acceso-volver"><Link href="/equipo">¿Eres del equipo? Vincular este celular</Link></p>}
     </main>
   );
 }
