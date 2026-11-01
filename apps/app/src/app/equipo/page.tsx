@@ -10,7 +10,7 @@ import { LogoTabi } from '@tabi/ui/logo';
 import { CONFIG } from '@/lib/config';
 import {
   estadoDispositivo, iniciarTurno, nombreSugerido, terminarTurno, vincular,
-  type EstadoDispositivo, type PersonaTurno, type Rol
+  type EsperandoAprobacion, type EstadoDispositivo, type PersonaTurno, type Rol
 } from '@/lib/equipo/dispositivo';
 import { aviso } from '@/componentes/ui/aviso';
 import { AppMesero } from '@/componentes/equipo/app-mesero';
@@ -46,7 +46,7 @@ function Vincular({ codigoInicial, alVincular }: { codigoInicial: string; alVinc
     setError('');
     try {
       const r = await vincular(codigo.replace(/\s/g, ''), nombre);
-      aviso(`Celular vinculado a ${r.restaurante}`);
+      aviso(`Listo. Falta que un administrador de ${r.restaurante} lo apruebe`);
       alVincular();
     } catch (e) {
       setError((e as Error).message);
@@ -69,6 +69,24 @@ function Vincular({ codigoInicial, alVincular }: { codigoInicial: string; alVinc
           {enviando ? 'Vinculando…' : 'Vincular'}
         </button>
       </form>
+    </Caja>
+  );
+}
+
+// Paso 2 de la vinculación: el celular espera a que un administrador lo apruebe en el
+// panel. Se revisa cada pocos segundos; si lo rechazan, vuelve a pedir código.
+function Esperando({ estado, alCambiar }: { estado: EsperandoAprobacion; alCambiar: () => void }) {
+  useEffect(() => {
+    const reloj = setInterval(() => {
+      estadoDispositivo().then((nuevo) => { if (!nuevo?.pendiente) alCambiar(); }).catch(() => undefined);
+    }, 4000);
+    return () => clearInterval(reloj);
+  }, [alCambiar]);
+
+  return (
+    <Caja ocupado>
+      <Marca titulo="Esperando aprobación"
+        texto={`${estado.dispositivo} pidió entrar a ${estado.restaurante.nombre}. Pídele a un administrador que lo apruebe en el panel, en Equipo. Esta pantalla avanza sola.`} />
     </Caja>
   );
 }
@@ -132,7 +150,7 @@ function EnTurno({ estado, alTerminar }: { estado: EstadoDispositivo; alTerminar
 export default function PantallaEquipo() {
   const router = useRouter();
   const codigo = useSearchParams().get('codigo') ?? '';
-  const [estado, setEstado] = useState<EstadoDispositivo | null | undefined>(undefined);
+  const [estado, setEstado] = useState<EstadoDispositivo | EsperandoAprobacion | null | undefined>(undefined);
   const [error, setError] = useState('');
   const [persona, setPersona] = useState<PersonaTurno | null>(null);
 
@@ -165,6 +183,7 @@ export default function PantallaEquipo() {
   }
   if (estado === undefined) return <Caja ocupado><Marca titulo="Cargando…" /></Caja>;
   if (estado === null) return <Vincular codigoInicial={codigo} alVincular={cargar} />;
+  if (estado.pendiente) return <Esperando estado={estado} alCambiar={cargar} />;
   if (estado.turno) return <EnTurno estado={estado} alTerminar={cargar} />;
   if (persona) {
     return (

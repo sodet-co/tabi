@@ -7,7 +7,7 @@ import QRCode from 'qrcode';
 import { CONFIG } from '@/lib/config';
 import {
   agregarPersona, cambiarActivo, cambiarRol, cargarEquipo, crearCodigoVinculacion,
-  escucharCambios, fijarPin, quitarDispositivo, type Persona
+  aprobarDispositivo, escucharCambios, fijarPin, quitarDispositivo, type Persona
 } from '@/lib/equipo/admin';
 import type { Rol } from '@/lib/equipo/dispositivo';
 import { fechaHora } from '@/lib/formato';
@@ -105,10 +105,11 @@ function Vincular({ restauranteId }: { restauranteId: string }) {
             <p className="vincular__codigo">{codigo.codigo.slice(0, 4)} {codigo.codigo.slice(4)}</p>
             <p className={vencido ? 'texto-suave' : ''}>
               {vencido ? 'Este código venció. Genera otro.'
-                : `Vence en ${Math.floor(restante / 60)}:${String(restante % 60).padStart(2, '0')}. Sirve para varios celulares.`}
+                : `Vence en ${Math.floor(restante / 60)}:${String(restante % 60).padStart(2, '0')}. Sirve para un solo celular.`}
             </p>
             <p className="texto-pequeno texto-suave">
               Escanea el QR con la cámara del celular. Si no se puede, abre <strong>{new URL('/equipo', codigo.enlace).href}</strong> y escribe el código.
+              Después apruébalo aquí: aparece en &ldquo;Esperando aprobación&rdquo;.
             </p>
           </div>
         </div>
@@ -142,7 +143,9 @@ export default function Equipo() {
   if (error) return <main className="panel"><p className="texto-suave">{error}</p></main>;
   if (!datos) return <main className="panel" aria-busy="true" />;
 
-  const { personas, dispositivos, turnos } = datos;
+  const { personas, turnos } = datos;
+  const dispositivos = datos.dispositivos.filter((d) => d.aprobado);
+  const pendientes = datos.dispositivos.filter((d) => !d.aprobado);
   const turnoDe = (personaId: string) => turnos.find((t) => t.equipoId === personaId);
   const nombreDispositivo = (id: string) => dispositivos.find((d) => d.id === id)?.nombre ?? 'otro aparato';
   const personaEn = (dispositivoId: string) => {
@@ -177,6 +180,35 @@ export default function Equipo() {
       </div>
 
       <Vincular restauranteId={datos.restauranteId} />
+
+      {pendientes.length > 0 && (
+        <section className="tarjeta bloque pendientes" aria-live="polite">
+          <div className="bloque__titulo">
+            <h3>Esperando aprobación</h3>
+            <span className="texto-pequeno texto-suave">Aprueba solo los celulares que reconozcas</span>
+          </div>
+          <ul className="pendientes__lista">
+            {pendientes.map((d) => (
+              <li key={d.id}>
+                <div>
+                  <strong>{d.nombre}</strong>
+                  <div className="texto-pequeno texto-suave">Pidió entrar {fechaHora(d.vinculadoEn)}</div>
+                </div>
+                <div className="tabla__acciones">
+                  <button className="boton boton--marca boton--pequeno"
+                    onClick={async () => { await intentar(() => aprobarDispositivo(d.id), `${d.nombre} aprobado`); recargar(); }}>
+                    Aprobar
+                  </button>
+                  <button className="boton boton--peligro boton--pequeno"
+                    onClick={async () => { await intentar(() => quitarDispositivo(d.id), `${d.nombre} rechazado`); recargar(); }}>
+                    Rechazar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="tarjeta bloque">
         <div className="bloque__titulo">

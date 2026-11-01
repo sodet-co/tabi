@@ -11,10 +11,18 @@ export type Rol = 'mesero' | 'cocina' | 'admin';
 export type PersonaTurno = { id: string; nombre: string; rol: Rol };
 
 export type EstadoDispositivo = {
+  pendiente?: false;
   dispositivo: string;
   restaurante: { id: string; slug: string; nombre: string };
   equipo: PersonaTurno[];
   turno: { id: string; inicio: string; equipo_id: string; nombre: string; rol: Rol } | null;
+};
+
+// Vinculado con el código pero todavía sin la aprobación de un administrador.
+export type EsperandoAprobacion = {
+  pendiente: true;
+  dispositivo: string;
+  restaurante: { id: string; slug: string; nombre: string };
 };
 
 let cliente: SupabaseClient | null = null;
@@ -52,11 +60,11 @@ async function llamar<T>(funcion: string, argumentos: Record<string, unknown> = 
   return data as T;
 }
 
-// Null si el aparato todavía no está vinculado a ningún restaurante.
-export async function estadoDispositivo(): Promise<EstadoDispositivo | null> {
+// Null si el aparato todavía no está vinculado a ningún restaurante (o lo rechazaron).
+export async function estadoDispositivo(): Promise<EstadoDispositivo | EsperandoAprobacion | null> {
   const { data } = await clienteDispositivo().auth.getSession();
   if (!data.session) return null;
-  return llamar<EstadoDispositivo | null>('mi_dispositivo');
+  return llamar<EstadoDispositivo | EsperandoAprobacion | null>('mi_dispositivo');
 }
 
 export async function vincular(codigo: string, nombre: string) {

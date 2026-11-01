@@ -18,6 +18,8 @@ export type Dispositivo = {
   nombre: string;
   vinculadoEn: string;
   ultimoUso: string;
+  // false: canjeó el código y espera que un administrador lo apruebe.
+  aprobado: boolean;
 };
 
 export type Turno = { id: string; equipoId: string; dispositivoId: string; inicio: string };
@@ -29,7 +31,7 @@ export async function cargarEquipo(restauranteId: string) {
       .select('id, nombre, rol, activo, usuario_id, bloqueado_hasta, tiene_pin')
       .eq('restaurante_id', restauranteId).order('nombre'),
     supabase().from('dispositivos')
-      .select('id, nombre, vinculado_en, ultimo_uso')
+      .select('id, nombre, vinculado_en, ultimo_uso, aprobado_en')
       .eq('restaurante_id', restauranteId).is('revocado_en', null).order('vinculado_en'),
     supabase().from('turnos')
       .select('id, equipo_id, dispositivo_id, inicio')
@@ -48,7 +50,7 @@ export async function cargarEquipo(restauranteId: string) {
       bloqueadoHasta: p.bloqueado_hasta && new Date(p.bloqueado_hasta) > new Date() ? p.bloqueado_hasta : null
     })),
     dispositivos: revisar(dispositivos, 'No se pudieron cargar los celulares').map((d): Dispositivo => ({
-      id: d.id, nombre: d.nombre, vinculadoEn: d.vinculado_en, ultimoUso: d.ultimo_uso
+      id: d.id, nombre: d.nombre, vinculadoEn: d.vinculado_en, ultimoUso: d.ultimo_uso, aprobado: Boolean(d.aprobado_en)
     })),
     turnos: revisar(turnos, 'No se pudieron cargar los turnos').map((t): Turno => ({
       id: t.id, equipoId: t.equipo_id, dispositivoId: t.dispositivo_id, inicio: t.inicio
@@ -91,6 +93,11 @@ export async function quitarDispositivo(dispositivoId: string) {
   if (error) throw new Error('No se pudo quitar el celular');
 }
 
+export async function aprobarDispositivo(dispositivoId: string) {
+  const { error } = await supabase().rpc('aprobar_dispositivo', { p_dispositivo_id: dispositivoId });
+  if (error) throw new Error(error.message || 'No se pudo aprobar el celular');
+}
+
 export async function crearCodigoVinculacion(restauranteId: string) {
   const { data, error } = await supabase().rpc('crear_codigo_vinculacion', { p_restaurante_id: restauranteId });
   if (error) throw new Error(error.message || 'No se pudo generar el código');
@@ -102,6 +109,7 @@ export function escucharCambios(restauranteId: string, alCambiar: () => void) {
   const canal = supabase()
     .channel(`equipo-${restauranteId}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'turnos', filter: `restaurante_id=eq.${restauranteId}` }, alCambiar)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'dispositivos', filter: `restaurante_id=eq.${restauranteId}` }, alCambiar)
     .subscribe();
   return () => { supabase().removeChannel(canal); };
 }
