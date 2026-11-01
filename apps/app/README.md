@@ -11,6 +11,6 @@ Varios restaurantes: el restaurante activo sale del `[slug]` de la URL (`src/lib
 y quién administra cuál está en la tabla `miembros`. Los slugs que chocan con rutas de la app
 (`admin`, `login`…) están reservados en la base.
 
-La fuente de datos se elige con `NEXT_PUBLIC_TABI_FUENTE`: `local` (navegador, para la demo,
-solo con La Cocina de Ana) o `supabase` (esquema en `/supabase`). Toda la lectura y escritura
+Con `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` la app usa Supabase (esquema en
+`/supabase`); sin ellas guarda todo en el navegador, solo con La Cocina de Ana, para diseñar sin internet. Toda la lectura y escritura
 pasa por `src/lib/datos`.

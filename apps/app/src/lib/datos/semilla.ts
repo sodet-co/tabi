@@ -19,7 +19,7 @@ export const seccionesSemilla: Seccion[] = [
   { id: 'brunch', nombre: 'Brunch', orden: 2, activa: true },
   { id: 'carnes', nombre: 'Carnes', orden: 3, activa: true },
   { id: 'postres', nombre: 'Postres', orden: 4, activa: true },
-  { id: 'bebidas', nombre: 'Bebidas', orden: 5, activa: true },
+  { id: 'bebidas', nombre: 'Bebidas', orden: 5, activa: true, aCocina: false },
   { id: 'adiciones', nombre: 'Adiciones', orden: 6, activa: true }
 ];
 

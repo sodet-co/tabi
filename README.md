@@ -24,7 +24,7 @@ npm run build                    # compila las dos apps
 npm run lint
 ```
 
-En modo demo (`NEXT_PUBLIC_TABI_FUENTE=local`) al panel se entra con el botón "Ingresar", sin credenciales.
+Sin las variables de Supabase la app guarda todo en el navegador y al panel se entra con el botón "Ingresar", sin credenciales.
 
 ## Base de datos
 
