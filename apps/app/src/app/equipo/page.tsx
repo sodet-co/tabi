@@ -17,6 +17,7 @@ import { aviso } from '@/componentes/ui/aviso';
 import { AppMesero } from '@/componentes/equipo/app-mesero';
 import { AppCocina } from '@/componentes/equipo/app-cocina';
 import { TecladoPin } from '@/componentes/equipo/teclado-pin';
+import { cambiarSonido, desbloquearAudio, useSonido } from '@/componentes/equipo/sonido';
 
 const ROL: Record<Rol, string> = { mesero: 'Mesero', cocina: 'Cocina', admin: 'Administrador' };
 const hora = (fecha: string) => new Date(fecha).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' });
@@ -118,6 +119,13 @@ function ElegirPersona({ estado, alElegir }: { estado: EstadoDispositivo; alEleg
 function EnTurno({ estado, alTerminar }: { estado: EstadoDispositivo; alTerminar: () => void }) {
   const turno = estado.turno!;
   const [terminando, setTerminando] = useState(false);
+  const sonido = useSonido();
+
+  // El navegador solo deja sonar después de un toque: cada toque deja el audio listo.
+  useEffect(() => {
+    document.addEventListener('pointerdown', desbloquearAudio);
+    return () => document.removeEventListener('pointerdown', desbloquearAudio);
+  }, []);
 
   async function terminar() {
     setTerminando(true);
@@ -139,6 +147,10 @@ function EnTurno({ estado, alTerminar }: { estado: EstadoDispositivo; alTerminar
           <strong>{turno.nombre}</strong>
           <span>{ROL[turno.rol]} · desde las {hora(turno.inicio)}</span>
         </div>
+        <button className="boton boton--contorno boton--pequeno turno__sonido" onClick={() => cambiarSonido(!sonido)}
+          aria-pressed={sonido} aria-label={sonido ? 'Silenciar avisos' : 'Activar sonido de avisos'}>
+          {sonido ? '🔔' : '🔕'}
+        </button>
         <button className="boton boton--contorno boton--pequeno" onClick={terminar} disabled={terminando}>
           {terminando ? 'Terminando…' : 'Terminar turno'}
         </button>

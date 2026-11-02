@@ -245,3 +245,17 @@
   padding: 8px 12px; border-radius: var(--radio-sm); background: var(--blanco); border: 1px solid var(--linea); font-size: .9rem;
 }
 @media (prefers-reduced-motion: reduce) { .comanda { animation: none; } }
+
+/* Cobro */
+.cuenta--pagada { opacity: .85; }
+.cuenta__cobro { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; color: var(--verde); }
+.precuenta { display: grid; gap: 6px; }
+.precuenta p { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
+.precuenta__total { padding-top: 8px; border-top: 2px solid var(--carbon-800); font-family: var(--fuente-titulo); font-size: 1.2rem; font-weight: 700; }
+.pago { display: grid; gap: 8px; padding: 10px 0; border-top: 1px solid var(--linea); }
+.pago:first-of-type { border-top: 0; }
+.pago__montos { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+.pago__montos .campo { flex: 1 1 140px; }
+.pago__cambio { font-size: 1.05rem; color: var(--verde); }
+.sin-cobrar { border: 1px solid var(--rojo-600); }
+.aviso-dia { padding: 12px 14px; border-radius: var(--radio-md); background: var(--rojo-050); border: 1px solid var(--rojo-600); color: var(--carbon-800); font-size: .9rem; }

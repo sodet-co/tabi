@@ -22,6 +22,7 @@ const ENLACES = [
   { destino: '', texto: 'Dashboard' },
   { destino: '/menu', texto: 'Menú' },
   { destino: '/mesas', texto: 'Mesas' },
+  { destino: '/cierre', texto: 'Cierre del día' },
   { destino: '/reportes', texto: 'Reportes' },
   { destino: '/equipo', texto: 'Equipo' },
   { destino: '/configuracion', texto: 'Configuración' }

@@ -6,6 +6,7 @@ import { useFuente, useSlug } from '@/lib/restaurante-actual';
 import type { Restaurante } from '@/lib/tipos';
 import { useDatos } from '@/lib/usar-datos';
 import { aviso } from '@/componentes/ui/aviso';
+import { ConfigCobro } from '@/componentes/admin/config-cobro';
 
 const CAMPOS: { nombre: keyof Restaurante; etiqueta: string; requerido?: boolean; tipo?: string }[] = [
   { nombre: 'nombre', etiqueta: 'Nombre del restaurante', requerido: true },
@@ -72,6 +73,8 @@ export default function Configuracion() {
           </div>
         </form>
       </section>
+
+      {CONFIG.FUENTE === 'supabase' && <ConfigCobro restauranteId={restaurante.id} />}
 
       <section className="tarjeta bloque">
         <div className="bloque__titulo"><h3>Enlace de la carta</h3></div>

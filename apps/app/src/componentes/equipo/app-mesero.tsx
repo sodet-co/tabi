@@ -3,18 +3,19 @@
 // La app del mesero en turno: la sala en vivo y el detalle de cada mesa con sus cuentas.
 // Toda acción que cambie una cuenta pasa por el PIN (ModalPin) y la base la registra
 // a nombre de quien está en turno.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { precio } from '@/lib/formato';
 import type { EstadoDispositivo } from '@/lib/equipo/dispositivo';
 import {
   abrirMesa, agregarItems, anularItem, cargarCarta, cargarCerradas, cargarSala, cerrarMesa, reabrirMesa, dividirItem, escucharSala,
   juntarCuentas, moverItems, nuevaCuenta, pedirCuenta, quitarItem, totalDe,
-  atenderLlamado, entregarItems, type Cuenta, type Item, type Llamado, type Mesa, type Ocupacion, type Producto, type Sala, type Seccion
+  atenderLlamado, entregarItems, cobrarCuenta, anularCobro, cerrarSinCobrar, type Cuenta, type Item, type Llamado, type Mesa, type Ocupacion, type Producto, type Sala, type Seccion
 } from '@/lib/equipo/mesero';
 import { aviso } from '@/componentes/ui/aviso';
 import { ModalPin } from './teclado-pin';
 import { minutos, useAhora } from './tiempo';
 import { AppCocina } from './app-cocina';
+import { sonar } from './sonido';
 
 // Lo que espera el PIN. ejecutar puede devolver otro paso (anular pide dos PIN).
 type Paso = {
@@ -162,6 +163,12 @@ function VistaSala({ sala, alElegir, alAtender }: { sala: Sala; alElegir: (mesa:
         alIrAMesa={(id) => { const m = sala.mesas.find((x) => x.id === id); if (m) alElegir(m); }} />
       <PorLlevar sala={sala} alEntregar={alAtender}
         alIrAMesa={(id) => { const m = sala.mesas.find((x) => x.id === id); if (m) alElegir(m); }} />
+      {sala.jornada?.deOtroDia && (
+        <p className="aviso-dia" role="alert">
+          <strong>El día que empezó el {new Date(sala.jornada.abiertaEn).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })} no se ha cerrado.</strong>
+          {' '}Cobra o cierra las mesas que quedaron abiertas y pide a un administrador que cierre el día desde el panel.
+        </p>
+      )}
       <p className="sala__resumen">{abiertas} de {sala.mesas.length} mesas ocupadas</p>
       {sala.ambientes.map((ambiente) => {
         const mesas = sala.mesas.filter((m) => m.ambienteId === ambiente.id);
@@ -180,7 +187,10 @@ function VistaSala({ sala, alElegir, alAtender }: { sala: Sala; alElegir: (mesa:
                     {o ? (
                       <>
                         <span className="mesa-tile__total">{precio(totalOcupacion(o))}</span>
-                        <span className="mesa-tile__detalle">{o.estado === 'por_cobrar' ? 'Por cobrar' : minutos(o.abiertaEn, ahora)}</span>
+                        <span className="mesa-tile__detalle">
+                          {new Date(o.abiertaEn).toDateString() !== new Date(ahora).toDateString() ? 'Desde otro día'
+                            : o.estado === 'por_cobrar' ? 'Por cobrar' : minutos(o.abiertaEn, ahora)}
+                        </span>
                       </>
                     ) : <span className="mesa-tile__detalle">Libre</span>}
                   </button>
@@ -450,9 +460,135 @@ function HojaItem({ item, cuenta, cuentas, sala, nombreMesa, conPin, alCambiar, 
   );
 }
 
+/* Cobrar una cuenta ---------------------------------------------------------------------- */
+// Precuenta (subtotal + propina voluntaria = total) y cómo paga: un método o varios (mixto).
+// En efectivo se anota cuánto entregó y Tabi calcula el cambio. Al final pide el PIN.
+type FilaPago = { metodoId: string; monto: string; recibido: string };
+const aCentavos = (pesos: string) => Math.round((Number(pesos.replace(/[^\d]/g, '')) || 0) * 100);
+const enPesos = (centavos: number) => String(Math.round(centavos / 100));
+
+function HojaCobro({ cuenta, items, sala, nombreMesa, conPin, alCerrar }: {
+  cuenta: Cuenta; items: Item[]; sala: Sala; nombreMesa: string; conPin: ConPin; alCerrar: () => void;
+}) {
+  const subtotal = totalDe(items);
+  const sugerida = Math.round(subtotal * sala.propinaSugerida / 100);
+  const [modo, setModo] = useState<'sugerida' | 'ninguna' | 'otra'>(sala.propinaSugerida > 0 ? 'sugerida' : 'ninguna');
+  const [otra, setOtra] = useState('');
+  const propina = modo === 'sugerida' ? sugerida : modo === 'otra' ? aCentavos(otra) : 0;
+  const total = subtotal + propina;
+
+  const metodos = sala.metodosPago;
+  const [filas, setFilas] = useState<FilaPago[]>([{ metodoId: metodos[0]?.id ?? '', monto: '', recibido: '' }]);
+  // Con un solo método, paga todo; con varios, el primero cubre lo que falte.
+  const montos = filas.map((f, n) => n === 0 ? total - filas.slice(1).reduce((s, x) => s + aCentavos(x.monto), 0) : aCentavos(f.monto));
+  const metodoDe = (id: string) => metodos.find((m) => m.id === id);
+  const cambio = filas.reduce((s, f, n) => s + (metodoDe(f.metodoId)?.efectivo && f.recibido ? aCentavos(f.recibido) - montos[n] : 0), 0);
+  const error =
+    !metodos.length ? 'No hay métodos de pago activos: actívalos en el panel, en Configuración'
+    : propina > subtotal ? 'La propina no puede ser mayor que la cuenta'
+    : montos.some((m) => m <= 0) ? 'Cada método debe pagar algo'
+    : filas.some((f, n) => metodoDe(f.metodoId)?.efectivo && f.recibido && aCentavos(f.recibido) < montos[n]) ? 'El efectivo recibido no alcanza'
+    : '';
+
+  const cambiarFila = (n: number, cambios: Partial<FilaPago>) => setFilas((fs) => fs.map((f, i) => i === n ? { ...f, ...cambios } : f));
+
+  function cobrar() {
+    const pagos = filas.map((f, n) => ({
+      metodoId: f.metodoId, monto: montos[n],
+      ...(metodoDe(f.metodoId)?.efectivo && f.recibido ? { recibido: aCentavos(f.recibido) } : {})
+    }));
+    const como = filas.map((f) => metodoDe(f.metodoId)?.nombre).join(' + ');
+    conPin({
+      titulo: `Cobrar cuenta ${cuenta.particion}`,
+      detalle: `Mesa ${nombreMesa} · ${precio(total)} · ${como}`,
+      exito: cambio > 0 ? `Cobrado. Entrega ${precio(cambio)} de cambio` : 'Cuenta cobrada',
+      ejecutar: async (pin) => {
+        await cobrarCuenta(cuenta.id, propina, pagos, pin);
+        alCerrar();
+      }
+    });
+  }
+
+  return (
+    <div className="hoja" onClick={(e) => { if (e.target === e.currentTarget) alCerrar(); }}>
+      <div className="hoja__caja" role="dialog" aria-modal="true" aria-label={`Cobrar cuenta ${cuenta.particion}`}>
+        <div className="hoja__cabecera">
+          <div>
+            <h2>Cobrar cuenta {cuenta.particion}</h2>
+            <p className="texto-pequeno texto-suave">Mesa {nombreMesa}</p>
+          </div>
+          <button className="boton boton--fantasma boton--pequeno" onClick={alCerrar}>Cerrar</button>
+        </div>
+
+        <section className="hoja__seccion precuenta">
+          <p><span>Subtotal</span><span>{precio(subtotal)}</span></p>
+          <div className="hoja__botones" role="radiogroup" aria-label="Propina">
+            {sala.propinaSugerida > 0 && (
+              <button role="radio" aria-checked={modo === 'sugerida'} className={`chip ${modo === 'sugerida' ? 'activo' : ''}`}
+                onClick={() => setModo('sugerida')}>Propina {sala.propinaSugerida} % · {precio(sugerida)}</button>
+            )}
+            <button role="radio" aria-checked={modo === 'otra'} className={`chip ${modo === 'otra' ? 'activo' : ''}`}
+              onClick={() => { setModo('otra'); setOtra(enPesos(propina)); }}>Otra propina</button>
+            <button role="radio" aria-checked={modo === 'ninguna'} className={`chip ${modo === 'ninguna' ? 'activo' : ''}`}
+              onClick={() => setModo('ninguna')}>Sin propina</button>
+          </div>
+          {modo === 'otra' && (
+            <label className="campo"><span>Propina ($)</span>
+              <input id="propina-otra" inputMode="numeric" value={otra} onChange={(e) => setOtra(e.target.value)} placeholder="0" /></label>
+          )}
+          {propina > 0 && <p><span>Propina (voluntaria)</span><span>{precio(propina)}</span></p>}
+          <p className="precuenta__total"><span>Total a pagar</span><span>{precio(total)}</span></p>
+        </section>
+
+        <section className="hoja__seccion">
+          <h3>¿Cómo paga?</h3>
+          {filas.map((f, n) => {
+            const metodo = metodoDe(f.metodoId);
+            return (
+              <div key={n} className="pago">
+                <div className="hoja__botones">
+                  {metodos.map((m) => (
+                    <button key={m.id} className={`chip ${f.metodoId === m.id ? 'activo' : ''}`} onClick={() => cambiarFila(n, { metodoId: m.id })}>
+                      {m.nombre}
+                    </button>
+                  ))}
+                </div>
+                <div className="pago__montos">
+                  {filas.length > 1 && (n === 0
+                    ? <p className="texto-pequeno"><span className="texto-suave">Paga con {metodo?.nombre}:</span> <strong>{precio(montos[0])}</strong></p>
+                    : <label className="campo"><span>Monto en {metodo?.nombre} ($)</span>
+                        <input id={`monto-${n}`} inputMode="numeric" value={f.monto} onChange={(e) => cambiarFila(n, { monto: e.target.value })} /></label>)}
+                  {metodo?.efectivo && (
+                    <label className="campo"><span>Recibe en efectivo ($)</span>
+                      <input id={`recibido-${n}`} inputMode="numeric" value={f.recibido} placeholder={enPesos(montos[n])}
+                        onChange={(e) => cambiarFila(n, { recibido: e.target.value })} /></label>
+                  )}
+                  {n > 0 && (
+                    <button className="boton boton--fantasma boton--pequeno" onClick={() => setFilas((fs) => fs.filter((_, i) => i !== n))}>Quitar</button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          {filas.length < 3 && metodos.length > 1 && (
+            <button className="boton boton--fantasma boton--pequeno"
+              onClick={() => setFilas((fs) => [...fs, { metodoId: metodos.find((m) => !fs.some((x) => x.metodoId === m.id))?.id ?? metodos[0].id, monto: '', recibido: '' }])}>
+              + Pagar una parte con otro método
+            </button>
+          )}
+          {cambio > 0 && <p className="pago__cambio">Cambio: <strong>{precio(cambio)}</strong></p>}
+        </section>
+
+        {error && <p className="texto-pequeno acceso-error">{error}</p>}
+        <button className="boton boton--marca boton--bloque" disabled={Boolean(error)} onClick={cobrar}>Cobrar {precio(total)}</button>
+      </div>
+    </div>
+  );
+}
+
 /* Detalle de una mesa -------------------------------------------------------------------- */
-function DetalleMesa({ sala, mesa, conPin, carta, recargar, alVolver }: {
-  sala: Sala; mesa: Mesa; conPin: ConPin; recargar: () => void;
+function DetalleMesa({ sala, mesa, conPin, carta, recargar, alVolver, esAdmin }: {
+  sala: Sala; mesa: Mesa; conPin: ConPin; recargar: () => void; esAdmin: boolean;
   carta: { secciones: Seccion[]; productos: Producto[] } | null;
   alVolver: () => void;
 }) {
@@ -461,6 +597,8 @@ function DetalleMesa({ sala, mesa, conPin, carta, recargar, alVolver }: {
   const cuentas = useMemo(() => sala.cuentas.filter((c) => c.ocupacionId === ocupacion?.id), [sala, ocupacion]);
   const [agregandoA, setAgregandoA] = useState<Cuenta | null>(null);
   const [itemAbierto, setItemAbierto] = useState<string | null>(null);
+  const [cobrando, setCobrando] = useState<Cuenta | null>(null);
+  const [motivo, setMotivo] = useState<string | null>(null);
 
   if (!ocupacion) {
     return (
@@ -475,6 +613,9 @@ function DetalleMesa({ sala, mesa, conPin, carta, recargar, alVolver }: {
   const total = totalDe(sala.items.filter((i) => cuentas.some((c) => c.id === i.cuentaId)));
   const item = sala.items.find((i) => i.id === itemAbierto);
   const cuentaDelItem = item && cuentas.find((c) => c.id === item.cuentaId);
+  const cobroDe = (c: Cuenta) => sala.cobros.find((b) => b.cuentaId === c.id);
+  // Cuentas con productos que falta cobrar: sin cobrarlas no se cierra la mesa.
+  const porCobrar = cuentas.filter((c) => c.estado === 'abierta' && totalDe(itemsDe(c)) > 0);
 
   const juntar = (origen: Cuenta, destino: Cuenta) => conPin({
     titulo: `Juntar ${origen.particion} con ${destino.particion}`,
@@ -502,18 +643,32 @@ function DetalleMesa({ sala, mesa, conPin, carta, recargar, alVolver }: {
 
       {cuentas.map((cuenta) => {
         const items = itemsDe(cuenta);
+        const pagada = cuenta.estado === 'pagada';
+        const cobro = cobroDe(cuenta);
         return (
-          <section key={cuenta.id} className="cuenta">
+          <section key={cuenta.id} className={`cuenta ${pagada ? 'cuenta--pagada' : ''}`}>
             <div className="cuenta__cabecera">
-              <h3>Cuenta {cuenta.particion}</h3>
+              <h3>Cuenta {cuenta.particion} {pagada && <span className="pastilla pastilla--ok">Pagada</span>}</h3>
               <span className="cuenta__total">{precio(totalDe(items))}</span>
             </div>
+            {cobro && (
+              <p className="cuenta__cobro texto-pequeno">
+                {cobro.pagos.map((p) => `${p.metodo} ${precio(p.monto)}`).join(' + ')}
+                {cobro.propina > 0 && ` · incluye ${precio(cobro.propina)} de propina`}
+                {esAdmin && (
+                  <button className="boton boton--fantasma boton--pequeno" onClick={() => conPin({
+                    titulo: `Anular cobro de la cuenta ${cuenta.particion}`, detalle: `${precio(cobro.total)}. La cuenta vuelve a quedar por cobrar.`,
+                    exito: 'Cobro anulado', ejecutar: (pin) => anularCobro(cobro.id, pin).then(() => undefined)
+                  })}>Anular cobro</button>
+                )}
+              </p>
+            )}
             {!items.length ? <p className="texto-pequeno texto-suave">Sin productos todavía.</p> : (
               <ul className="cuenta__items">
                 {items.map((i) => (
                   <li key={i.id}>
                     <button className={`item ${i.estado === 'anulado' ? 'item--anulado' : ''}`}
-                      disabled={i.estado === 'anulado'} onClick={() => setItemAbierto(i.id)}>
+                      disabled={i.estado === 'anulado' || pagada} onClick={() => setItemAbierto(i.id)}>
                       <span className="item__nombre">
                         {i.cantidad > 1 && `${i.cantidad}× `}{i.nombre}
                         {i.divisionId && <span className="item__parte"> · 1/{i.partes}</span>}
@@ -526,10 +681,15 @@ function DetalleMesa({ sala, mesa, conPin, carta, recargar, alVolver }: {
                 ))}
               </ul>
             )}
-            <div className="cuenta__acciones">
+            {!pagada && <div className="cuenta__acciones">
               <button className="boton boton--marca boton--pequeno" disabled={!carta} onClick={() => setAgregandoA(cuenta)}>
                 + Agregar productos
               </button>
+              {totalDe(items) > 0 && (
+                <button className="boton boton--contorno boton--pequeno" onClick={() => setCobrando(cuenta)}>
+                  Cobrar {precio(totalDe(items))}
+                </button>
+              )}
               {cuentas.length > 1 && (
                 <select id={`juntar-${cuenta.id}`} aria-label={`Juntar la cuenta ${cuenta.particion}`} value=""
                   onChange={(e) => { const destino = cuentas.find((c) => c.id === e.target.value); if (destino) juntar(cuenta, destino); }}>
@@ -537,7 +697,7 @@ function DetalleMesa({ sala, mesa, conPin, carta, recargar, alVolver }: {
                   {cuentas.filter((c) => c.id !== cuenta.id).map((c) => <option key={c.id} value={c.id}>Cuenta {c.particion}</option>)}
                 </select>
               )}
-            </div>
+            </div>}
           </section>
         );
       })}
@@ -553,14 +713,41 @@ function DetalleMesa({ sala, mesa, conPin, carta, recargar, alVolver }: {
             ejecutar: (pin) => pedirCuenta(ocupacion.id, pin).then(() => undefined)
           })}>Pidieron la cuenta</button>
         )}
-        <button className="boton boton--peligro" onClick={() => conPin({
+        <button className="boton boton--peligro" disabled={porCobrar.length > 0} onClick={() => conPin({
           titulo: `Cerrar mesa ${mesa.nombre}`, detalle: `Total ${precio(total)}. La mesa queda libre.`, exito: `Mesa ${mesa.nombre} cerrada`,
           ejecutar: async (pin) => { await cerrarMesa(ocupacion.id, pin); alVolver(); }
         })}>Cerrar mesa</button>
+        {esAdmin && porCobrar.length > 0 && motivo === null && (
+          <button className="boton boton--fantasma" onClick={() => setMotivo('')}>Cerrar sin cobrar</button>
+        )}
       </div>
+      {porCobrar.length > 0 && (
+        <p className="texto-pequeno texto-suave">
+          Para cerrar la mesa, cobra {porCobrar.length === 1 ? 'la cuenta' : 'las cuentas'} {porCobrar.map((c) => c.particion).join(', ')}.
+        </p>
+      )}
+      {motivo !== null && (
+        <section className="cuenta sin-cobrar">
+          <h3>Cerrar sin cobrar</h3>
+          <p className="texto-pequeno texto-suave">Para mesas que se fueron sin pagar o que quedaron abiertas de pruebas. Lo pedido queda registrado como no cobrado.</p>
+          <label className="campo"><span>Motivo</span>
+            <input id="motivo-sin-cobrar" value={motivo} maxLength={200} onChange={(e) => setMotivo(e.target.value)} placeholder="Ej. Mesa de pruebas" /></label>
+          <div className="hoja__botones">
+            <button className="boton boton--peligro" disabled={motivo.trim().length < 3} onClick={() => conPin({
+              titulo: `Cerrar mesa ${mesa.nombre} sin cobrar`, detalle: motivo.trim(), exito: `Mesa ${mesa.nombre} cerrada sin cobrar`,
+              ejecutar: async (pin) => { await cerrarSinCobrar(ocupacion.id, motivo.trim(), pin); alVolver(); }
+            })}>Cerrar sin cobrar</button>
+            <button className="boton boton--fantasma" onClick={() => setMotivo(null)}>Cancelar</button>
+          </div>
+        </section>
+      )}
 
       {agregandoA && carta && (
         <AgregarProductos carta={carta} cuenta={agregandoA} nombreMesa={mesa.nombre} alMarchar={recargar} alCerrar={() => setAgregandoA(null)} />
+      )}
+      {cobrando && (
+        <HojaCobro cuenta={cobrando} items={itemsDe(cobrando)} sala={sala} nombreMesa={mesa.nombre} conPin={conPin}
+          alCerrar={() => setCobrando(null)} />
       )}
       {item && cuentaDelItem && (
         <HojaItem item={item} cuenta={cuentaDelItem} cuentas={cuentas} sala={sala} nombreMesa={mesa.nombre}
@@ -670,6 +857,21 @@ export function AppMesero({ estado }: { estado: EstadoDispositivo }) {
   const [vista, setVista] = useState<'sala' | 'cerradas' | 'cocina'>('sala');
   const esAdmin = estado.turno?.rol === 'admin';
 
+  // Suena cuando llega un llamado nuevo o la cocina deja algo listo (no en la primera carga).
+  const vistos = useRef<{ llamados: Set<string>; listos: Set<string> } | null>(null);
+  useEffect(() => {
+    if (!sala) return;
+    const listos = sala.items.filter((i) => i.estado === 'listo').map((i) => i.divisionId ?? i.id);
+    const antes = vistos.current;
+    if (antes) {
+      const nuevos = sala.llamados.filter((l) => !antes.llamados.has(l.id));
+      if (nuevos.some((l) => l.motivo === 'cuenta')) sonar('cuenta');
+      else if (nuevos.length) sonar('llamado');
+      else if (listos.some((k) => !antes.listos.has(k))) sonar('listo');
+    }
+    vistos.current = { llamados: new Set(sala.llamados.map((l) => l.id)), listos: new Set(listos) };
+  }, [sala]);
+
   const cargar = useCallback(() => {
     cargarSala(restauranteId).then((s) => { setSala(s); setError(''); }).catch((e: Error) => setError(e.message));
   }, [restauranteId]);
@@ -712,7 +914,7 @@ export function AppMesero({ estado }: { estado: EstadoDispositivo }) {
   return (
     <>
       {mesa ? (
-        <DetalleMesa sala={sala} mesa={mesa} conPin={setPaso} carta={carta} recargar={cargar} alVolver={() => setMesaId(null)} />
+        <DetalleMesa sala={sala} mesa={mesa} conPin={setPaso} carta={carta} recargar={cargar} alVolver={() => setMesaId(null)} esAdmin={esAdmin} />
       ) : (
         <>
           <div className="chips vistas" role="tablist">

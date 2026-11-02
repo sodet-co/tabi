@@ -17,7 +17,7 @@ import { TecladoPin } from '@/componentes/equipo/teclado-pin';
 import { IconoMenu } from '@tabi/ui/iconos';
 import { ISOTIPO_SRC } from '@tabi/ui/logo';
 
-const ESTADO: Record<CuentaComensal['cuentas'][number]['items'][number]['estado'], { texto: string; clase: string }> = {
+const ESTADO: Record<NonNullable<CuentaComensal['cuentas'][number]['items'][number]['estado']>, { texto: string; clase: string }> = {
   pendiente: { texto: 'Recibido', clase: 'pastilla pastilla--off' },
   preparando: { texto: 'Preparando', clase: 'pastilla pastilla--alerta' },
   listo: { texto: 'Listo', clase: 'pastilla pastilla--ok' },
@@ -62,6 +62,9 @@ function VerCuenta({ cuenta, token }: { cuenta: CuentaComensal; token: string })
   const pendiente = (m: 'mesero' | 'cuenta') => cuenta.llamados.includes(m) || pedidos.includes(m);
   const total = cuenta.cuentas.reduce((s, c) => s + totalCuenta(c), 0);
   const varias = cuenta.cuentas.length > 1;
+  // Precuenta: lo que falta pagar + la propina voluntaria sugerida sobre eso.
+  const porPagar = cuenta.cuentas.filter((c) => !c.pagada).reduce((s, c) => s + totalCuenta(c), 0);
+  const propina = Math.round(porPagar * cuenta.propina_sugerida / 100);
 
   async function avisar(motivo: 'mesero' | 'cuenta') {
     setEnviando(motivo);
@@ -80,7 +83,12 @@ function VerCuenta({ cuenta, token }: { cuenta: CuentaComensal; token: string })
     <div className="mi-cuenta">
       {cuenta.cuentas.map((c) => (
         <section key={c.particion} className="mi-cuenta__cuenta">
-          {varias && <h3>Cuenta {c.particion} <span>{precio(totalCuenta(c))}</span></h3>}
+          {(varias || c.pagada) && (
+            <h3>
+              {varias ? `Cuenta ${c.particion}` : 'Tu cuenta'}
+              <span>{c.pagada && <span className="pastilla pastilla--ok">Pagada</span>} {precio(totalCuenta(c))}</span>
+            </h3>
+          )}
           {!c.items.length ? <p className="texto-pequeno texto-suave">Todavía no hay nada aquí.</p> : (
             <ul>
               {c.items.map((i, n) => (
@@ -89,7 +97,7 @@ function VerCuenta({ cuenta, token }: { cuenta: CuentaComensal; token: string })
                     {i.cantidad > 1 && `${i.cantidad}× `}{i.nombre}{i.partes > 1 && <span className="item__parte"> · 1/{i.partes}</span>}
                     {i.nota && <small>{i.nota}</small>}
                   </span>
-                  <span className={ESTADO[i.estado].clase}>{ESTADO[i.estado].texto}</span>
+                  {i.estado ? <span className={ESTADO[i.estado].clase}>{ESTADO[i.estado].texto}</span> : <span />}
                   <span className="mi-cuenta__precio">{precio(i.subtotal)}</span>
                 </li>
               ))}
@@ -97,7 +105,16 @@ function VerCuenta({ cuenta, token }: { cuenta: CuentaComensal; token: string })
           )}
         </section>
       ))}
-      <p className="mi-cuenta__total"><span>Total</span><span>{precio(total)}</span></p>
+      {porPagar === 0 && total > 0 ? (
+        <p className="mi-cuenta__total"><span>Cuenta pagada</span><span>{precio(total)}</span></p>
+      ) : (
+        <div className="mi-cuenta__precuenta">
+          {porPagar !== total && <p><span>Ya pagado</span><span>{precio(total - porPagar)}</span></p>}
+          <p><span>Subtotal{porPagar !== total ? ' por pagar' : ''}</span><span>{precio(porPagar)}</span></p>
+          {propina > 0 && <p><span>Propina sugerida ({cuenta.propina_sugerida} %, voluntaria)</span><span>{precio(propina)}</span></p>}
+          <p className="mi-cuenta__total"><span>Total a pagar</span><span>{precio(porPagar + propina)}</span></p>
+        </div>
+      )}
       <div className="mi-cuenta__botones">
         <button className="boton boton--contorno boton--bloque" disabled={pendiente('mesero') || enviando !== null} onClick={() => avisar('mesero')}>
           {pendiente('mesero') ? 'El mesero ya viene' : 'Llamar al mesero'}

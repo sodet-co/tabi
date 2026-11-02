@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { EstadoDispositivo } from '@/lib/equipo/dispositivo';
 import { cambiarEstadoCocina, cargarSala, escucharSala, type Item, type Sala } from '@/lib/equipo/mesero';
 import { aviso } from '@/componentes/ui/aviso';
+import { sonar } from './sonido';
 import { minutos, minutosDesde, useAhora } from './tiempo';
 
 type EstadoCocina = 'pendiente' | 'preparando' | 'listo';
@@ -81,33 +82,6 @@ function armarComandas(sala: Sala, ahora: number): Comanda[] {
 
 const enCocina = (c: Comanda) => c.lineas.some((l) => l.estado === 'pendiente' || l.estado === 'preparando');
 
-// Un "ding" corto cuando llega una comanda. Los navegadores solo dejan sonar después de que
-// alguien tocó la pantalla (aquí, al escribir el PIN).
-let audio: AudioContext | null = null;
-function sonar() {
-  try {
-    audio ??= new AudioContext();
-    const t = audio.currentTime;
-    for (const [frecuencia, inicio] of [[880, 0], [1320, 0.12]] as const) {
-      const osc = audio.createOscillator();
-      const vol = audio.createGain();
-      osc.frequency.value = frecuencia;
-      vol.gain.setValueAtTime(0.0001, t + inicio);
-      vol.gain.exponentialRampToValueAtTime(0.25, t + inicio + 0.02);
-      vol.gain.exponentialRampToValueAtTime(0.0001, t + inicio + 0.3);
-      osc.connect(vol).connect(audio.destination);
-      osc.start(t + inicio);
-      osc.stop(t + inicio + 0.32);
-    }
-  } catch { /* sin audio: queda el aviso visual */ }
-  navigator.vibrate?.(200);
-}
-
-const CLAVE_SONIDO = 'tabi.cocina.sonido';
-function leerSonido() {
-  try { return localStorage.getItem(CLAVE_SONIDO) !== 'no'; } catch { return true; }
-}
-
 function TarjetaComanda({ comanda, ahora, ocupada, alMover }: {
   comanda: Comanda; ahora: number; ocupada: boolean;
   alMover: (ids: string[], estado: EstadoCocina) => void;
@@ -170,7 +144,6 @@ export function AppCocina({ estado }: { estado: EstadoDispositivo }) {
   const [sala, setSala] = useState<Sala | null>(null);
   const [error, setError] = useState('');
   const [ocupadas, setOcupadas] = useState<Set<string>>(new Set());
-  const [sonido, setSonido] = useState(leerSonido);
   const ahora = useAhora(15_000);
 
   const cargar = useCallback(() => {
@@ -194,16 +167,9 @@ export function AppCocina({ estado }: { estado: EstadoDispositivo }) {
   useEffect(() => {
     if (!sala) return;
     const claves = new Set(activas.map((c) => c.clave));
-    if (conocidas.current && sonido && [...claves].some((k) => !conocidas.current!.has(k))) sonar();
+    if (conocidas.current && [...claves].some((k) => !conocidas.current!.has(k))) sonar('comanda');
     conocidas.current = new Set([...(conocidas.current ?? []), ...claves]);
-  }, [sala, activas, sonido]);
-
-  function cambiarSonido() {
-    const nuevo = !sonido;
-    setSonido(nuevo);
-    try { localStorage.setItem(CLAVE_SONIDO, nuevo ? 'si' : 'no'); } catch { /* sin almacenamiento */ }
-    if (nuevo) sonar();
-  }
+  }, [sala, activas]);
 
   async function mover(clave: string, ids: string[], nuevo: EstadoCocina) {
     setOcupadas((o) => new Set(o).add(clave));
@@ -226,9 +192,6 @@ export function AppCocina({ estado }: { estado: EstadoDispositivo }) {
         <p className="sala__resumen">
           {activas.length ? `${activas.length} ${activas.length === 1 ? 'comanda' : 'comandas'} en cocina` : 'Nada en cocina'}
         </p>
-        <button className="boton boton--fantasma boton--pequeno" onClick={cambiarSonido} aria-pressed={sonido}>
-          {sonido ? '🔔 Sonido' : '🔕 Sin sonido'}
-        </button>
       </div>
 
       {activas.length ? (

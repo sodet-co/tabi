@@ -18,10 +18,15 @@ export type CuentaComensal = {
   consecutivo: number;
   estado: 'abierta' | 'por_cobrar';
   abierta_en: string;
+  // Porcentaje de propina voluntaria que sugiere el restaurante (0: no sugiere).
+  propina_sugerida: number;
+  // false: el restaurante prefiere no mostrar el estado de cada plato (estado llega null).
+  mostrar_estado: boolean;
   llamados: ('mesero' | 'cuenta')[];
   cuentas: {
     particion: string;
-    items: { nombre: string; cantidad: number; subtotal: number; estado: EstadoPlato; nota: string | null; partes: number }[];
+    pagada: boolean;
+    items: { nombre: string; cantidad: number; subtotal: number; estado: EstadoPlato | null; nota: string | null; partes: number }[];
   }[];
 };
 

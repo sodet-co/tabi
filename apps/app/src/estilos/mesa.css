@@ -32,3 +32,6 @@
 }
 .mi-cuenta__botones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .mi-cuenta__aviso { background: var(--naranja-050); border-radius: var(--radio-md); padding: 14px; font-size: .9rem; color: var(--carbon-600); }
+.mi-cuenta__cuenta h3 > span { display: inline-flex; gap: 8px; align-items: center; }
+.mi-cuenta__precuenta { display: grid; gap: 4px; }
+.mi-cuenta__precuenta p:not(.mi-cuenta__total) { display: flex; justify-content: space-between; font-size: .9rem; color: var(--carbon-600); font-variant-numeric: tabular-nums; }

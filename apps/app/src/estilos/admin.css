@@ -138,3 +138,16 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: .875rem; }
   padding: 10px 12px; border-radius: var(--radio-sm); background: rgba(183, 121, 31, .08);
 }
 .vincular__usado { padding: 12px 14px; border-radius: var(--radio-sm); background: var(--naranja-050); color: var(--carbon-600); font-size: .9rem; }
+
+/* Cobro (Configuración) y cierre del día */
+.config-cobro__subtitulo { margin-top: 8px; font-size: .95rem; color: var(--carbon-600); }
+.cierre__pendiente { border: 2px solid var(--rojo-600); }
+.cierre__mesas { list-style: none; padding: 0; display: grid; gap: 8px; }
+.cierre__mesa { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--radio-sm); background: var(--rojo-050); }
+.cierre__motivo { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.cierre__motivo input { min-width: 220px; padding: 8px 10px; border: 1px solid var(--linea); border-radius: var(--radio-sm); }
+.cierre__cifras > div { display: grid; gap: 2px; }
+.cierre__cifras strong { font-family: var(--fuente-titulo); font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.cierre__efectivo { display: grid; gap: 8px; max-width: 420px; }
+.cierre__ok { color: var(--verde); font-weight: 600; }
+.cierre__dif { color: var(--rojo-600); font-weight: 600; }
