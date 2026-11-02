@@ -35,3 +35,4 @@
 .mi-cuenta__cuenta h3 > span { display: inline-flex; gap: 8px; align-items: center; }
 .mi-cuenta__precuenta { display: grid; gap: 4px; }
 .mi-cuenta__precuenta p:not(.mi-cuenta__total) { display: flex; justify-content: space-between; font-size: .9rem; color: var(--carbon-600); font-variant-numeric: tabular-nums; }
+.mi-cuenta__precuenta p.mi-cuenta__impuesto { font-size: .8rem; color: var(--texto-suave); }

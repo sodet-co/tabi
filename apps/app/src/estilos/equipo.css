@@ -259,3 +259,4 @@
 .pago__cambio { font-size: 1.05rem; color: var(--verde); }
 .sin-cobrar { border: 1px solid var(--rojo-600); }
 .aviso-dia { padding: 12px 14px; border-radius: var(--radio-md); background: var(--rojo-050); border: 1px solid var(--rojo-600); color: var(--carbon-800); font-size: .9rem; }
+.precuenta__impuesto { font-size: .85rem; color: var(--texto-suave); }

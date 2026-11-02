@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
+import { CONFIG } from '@/lib/config';
 import { aCentavos, aPesos, precio } from '@/lib/formato';
 import { useFuente } from '@/lib/restaurante-actual';
 import type { DatosRestaurante, Producto, Seccion } from '@/lib/tipos';
@@ -10,6 +11,39 @@ import { Foto, fotoProducto } from '@/componentes/ui/foto';
 
 // El modal se abre con null para "nuevo plato" o con el producto a editar.
 type Edicion = { producto: Producto | null } | null;
+
+// Impuesto del plato: el general del restaurante (lo normal), exento u otro.
+function leerImpuesto(datos: Record<string, string>) {
+  if (datos.impuestoModo === 'exento') return { nombre: 'Exento', porcentaje: 0 };
+  if (datos.impuestoModo === 'otro') {
+    const porcentaje = Number(datos.impuestoPorcentaje);
+    if (datos.impuestoNombre?.trim() && porcentaje >= 0 && porcentaje <= 50) return { nombre: datos.impuestoNombre.trim(), porcentaje };
+  }
+  return null;
+}
+
+function CampoImpuesto({ actual }: { actual: { nombre: string; porcentaje: number } | null }) {
+  const inicial = !actual ? 'general' : actual.porcentaje === 0 ? 'exento' : 'otro';
+  const [modo, setModo] = useState(inicial);
+  return (
+    <div className="formulario__fila">
+      <label className="campo"><span>Impuesto (incluido en el precio)</span>
+        <select name="impuestoModo" value={modo} onChange={(e) => setModo(e.target.value)}>
+          <option value="general">El general del restaurante</option>
+          <option value="exento">Exento (0 %)</option>
+          <option value="otro">Otro impuesto…</option>
+        </select></label>
+      {modo === 'otro' && (
+        <>
+          <label className="campo"><span>Nombre</span>
+            <input name="impuestoNombre" required maxLength={40} defaultValue={actual?.porcentaje ? actual.nombre : 'IVA'} /></label>
+          <label className="campo"><span>%</span>
+            <input name="impuestoPorcentaje" type="number" min={0} max={50} step="0.01" required defaultValue={actual?.porcentaje || 19} /></label>
+        </>
+      )}
+    </div>
+  );
+}
 
 function ModalProducto({ fuente, producto, secciones, alCerrar, alGuardar }: {
   fuente: DatosRestaurante;
@@ -34,7 +68,8 @@ function ModalProducto({ fuente, producto, secciones, alCerrar, alGuardar }: {
       precio: aCentavos(datos.precio),
       seccionId: datos.seccionId,
       imagen: datos.imagen.trim(),
-      disponible: datos.disponible === 'on'
+      disponible: datos.disponible === 'on',
+      ...(CONFIG.FUENTE === 'supabase' ? { impuesto: leerImpuesto(datos) } : {})
     });
     alGuardar();
   }
@@ -59,6 +94,7 @@ function ModalProducto({ fuente, producto, secciones, alCerrar, alGuardar }: {
           </div>
           <label className="campo"><span>URL de la foto (opcional)</span>
             <input name="imagen" placeholder="https://…" defaultValue={producto?.imagen} /></label>
+          {CONFIG.FUENTE === 'supabase' && <CampoImpuesto actual={producto?.impuesto ?? null} />}
           <label className="interruptor">
             <input type="checkbox" name="disponible" defaultChecked={!producto || producto.disponible} />
             <span>Disponible en la carta</span>

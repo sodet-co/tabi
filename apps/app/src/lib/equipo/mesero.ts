@@ -20,6 +20,8 @@ export type Item = {
   divisionId: string | null; partes: number; nota: string; estado: EstadoItem; agregadoPor: string | null;
   // creadoEn identifica la marcha (comanda); aCocina dice si la cocina lo prepara.
   creadoEn: string; actualizadoEn: string; anuladoEn: string | null; aCocina: boolean;
+  // Impuesto incluido en el precio (el del producto o el general del restaurante).
+  impuesto: { nombre: string; porcentaje: number };
 };
 export type PersonaEquipo = { id: string; nombre: string; rol: string; tienePin: boolean };
 export type Seccion = { id: string; nombre: string };
@@ -62,7 +64,7 @@ type Fila = Record<string, any>;
 
 // Filas de cuentas y productos → lo que ven las pantallas. aCocina dice si cada producto
 // pasa por cocina (las bebidas, por ejemplo, no).
-function aCuentasEItems(cuentas: Fila[], items: Fila[], aCocina: (i: Fila) => boolean) {
+function aCuentasEItems(cuentas: Fila[], items: Fila[], aCocina: (i: Fila) => boolean, impuestoGeneral = { nombre: 'Impuesto', porcentaje: 0 }) {
   // Cuántas partes tiene cada plato dividido (para mostrar "1/3").
   const partes = new Map<string, number>();
   items.forEach((i) => { if (i.division_id) partes.set(i.division_id, (partes.get(i.division_id) ?? 0) + 1); });
@@ -73,7 +75,8 @@ function aCuentasEItems(cuentas: Fila[], items: Fila[], aCocina: (i: Fila) => bo
       id: i.id, cuentaId: i.cuenta_id, nombre: i.nombre, precio: i.precio_centavos, cantidad: i.cantidad,
       subtotal: i.subtotal_centavos, divisionId: i.division_id, partes: i.division_id ? partes.get(i.division_id) ?? 1 : 1,
       nota: i.nota ?? '', estado: i.estado, agregadoPor: i.agregado_por,
-      creadoEn: i.creado_en, actualizadoEn: i.actualizado_en, anuladoEn: i.anulado_en, aCocina: aCocina(i)
+      creadoEn: i.creado_en, actualizadoEn: i.actualizado_en, anuladoEn: i.anulado_en, aCocina: aCocina(i),
+      impuesto: i.impuesto_nombre ? { nombre: i.impuesto_nombre, porcentaje: Number(i.impuesto_porcentaje) } : impuestoGeneral
     }))
   };
 }
@@ -111,7 +114,8 @@ export async function cargarSala(restauranteId: string): Promise<Sala> {
     ambientes: d.ambientes.map((a) => ({ id: a.id, nombre: a.nombre, orden: a.orden })),
     mesas: d.mesas.map((m) => ({ id: m.id, ambienteId: m.ambiente_id, nombre: m.nombre, orden: m.orden })),
     ocupaciones: d.ocupaciones.map(aOcupacion),
-    ...aCuentasEItems(d.cuentas, d.items, (i) => i.a_cocina),
+    ...aCuentasEItems(d.cuentas, d.items, (i) => i.a_cocina,
+      { nombre: extra.config.impuesto_nombre, porcentaje: Number(extra.config.impuesto_porcentaje) }),
     equipo: d.equipo.map((e) => ({ id: e.id, nombre: e.nombre, rol: e.rol, tienePin: e.tiene_pin })),
     llamados: d.llamados.map((l) => ({ id: l.id, ocupacionId: l.ocupacion_id, motivo: l.motivo, creadoEn: l.creado_en })),
     cobros: d.cobros.map((c): Cobro => ({

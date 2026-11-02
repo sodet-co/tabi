@@ -16,23 +16,33 @@ function revisar<T>({ data, error }: { data: T | null; error: { message: string;
 
 /* Configuración ------------------------------------------------------------------------------ */
 export type MetodoAdmin = { id: string; nombre: string; efectivo: boolean; activo: boolean; orden: number };
-export type ConfigCobro = { propinaSugerida: number; mostrarEstado: boolean; metodos: MetodoAdmin[] };
+export type ConfigCobro = {
+  propinaSugerida: number; mostrarEstado: boolean; metodos: MetodoAdmin[];
+  impuesto: { nombre: string; porcentaje: number };
+};
 
 export async function cargarConfigCobro(restauranteId: string): Promise<ConfigCobro> {
   const [restaurante, metodos] = await Promise.all([
-    supabase().from('restaurantes').select('propina_sugerida, mostrar_estado_comensal').eq('id', restauranteId).single(),
+    supabase().from('restaurantes').select('propina_sugerida, mostrar_estado_comensal, impuesto_nombre, impuesto_porcentaje').eq('id', restauranteId).single(),
     supabase().from('metodos_pago').select('id, nombre, efectivo, activo, orden').eq('restaurante_id', restauranteId).order('orden').order('nombre')
   ]);
   const r = revisar(restaurante, 'No se pudo cargar la configuración');
   return {
     propinaSugerida: r.propina_sugerida,
     mostrarEstado: r.mostrar_estado_comensal,
+    impuesto: { nombre: r.impuesto_nombre, porcentaje: Number(r.impuesto_porcentaje) },
     metodos: revisar(metodos, 'No se pudieron cargar los métodos de pago') as MetodoAdmin[]
   };
 }
 
-export async function guardarConfigCobro(restauranteId: string, cambios: { propinaSugerida?: number; mostrarEstado?: boolean }) {
+export async function guardarConfigCobro(restauranteId: string, cambios: {
+  propinaSugerida?: number; mostrarEstado?: boolean; impuesto?: { nombre: string; porcentaje: number };
+}) {
   const campos: Fila = {};
+  if (cambios.impuesto) {
+    campos.impuesto_nombre = cambios.impuesto.nombre;
+    campos.impuesto_porcentaje = cambios.impuesto.porcentaje;
+  }
   if (cambios.propinaSugerida !== undefined) campos.propina_sugerida = cambios.propinaSugerida;
   if (cambios.mostrarEstado !== undefined) campos.mostrar_estado_comensal = cambios.mostrarEstado;
   revisar(await supabase().from('restaurantes').update(campos).eq('id', restauranteId), 'No se pudo guardar');
@@ -60,6 +70,7 @@ export type ResumenDia = {
   ventas: number; propinas: number; cuentas: number;
   porMetodo: { metodo: string; efectivo: boolean; monto: number }[];
   porMesero: { mesero: string; cuentas: number; ventas: number; propinas: number }[];
+  impuestos: { nombre: string; porcentaje: number; base: number; valor: number }[];
   efectivoEsperado: number;
 };
 export type DiaCerrado = {
@@ -109,7 +120,9 @@ const efectivoDe = (pagos: Fila[]) => pagos.filter((p) => p.efectivo).reduce((s,
 export async function cargarDia(restauranteId: string): Promise<ResumenDia> {
   const fila = revisar(await supabase().from('jornadas').select('id, abierta_en, base_caja_centavos')
     .eq('restaurante_id', restauranteId).is('cerrada_en', null).maybeSingle(), 'No se pudo cargar el día') as Fila | null;
-  const vacio: ResumenDia = { jornada: null, abiertas: [], sinCobrar: [], ventas: 0, propinas: 0, cuentas: 0, porMetodo: [], porMesero: [], efectivoEsperado: 0 };
+  const vacio: ResumenDia = {
+    jornada: null, abiertas: [], sinCobrar: [], ventas: 0, propinas: 0, cuentas: 0, porMetodo: [], porMesero: [], impuestos: [], efectivoEsperado: 0
+  };
   if (!fila) return vacio;
 
   const [ocupaciones, equipo, { cobros, pagos }] = await Promise.all([
@@ -136,8 +149,22 @@ export async function cargarDia(restauranteId: string): Promise<ResumenDia> {
     porMesero.set(nombre, actual);
   }
 
+  const filasImpuesto = cobros.length
+    ? revisar(await supabase().from('cobro_impuestos').select('nombre, porcentaje, base_centavos, valor_centavos').in('cobro_id', cobros.map((c) => c.id)),
+      'No se pudieron cargar los impuestos')
+    : [];
+  const impuestos = new Map<string, { nombre: string; porcentaje: number; base: number; valor: number }>();
+  for (const i of filasImpuesto) {
+    const clave = `${i.nombre}|${i.porcentaje}`;
+    const actual = impuestos.get(clave) ?? { nombre: i.nombre, porcentaje: Number(i.porcentaje), base: 0, valor: 0 };
+    actual.base += i.base_centavos;
+    actual.valor += i.valor_centavos;
+    impuestos.set(clave, actual);
+  }
+
   return {
     jornada: { id: fila.id, abiertaEn: fila.abierta_en, baseCaja: fila.base_caja_centavos },
+    impuestos: [...impuestos.values()].sort((a, b) => b.porcentaje - a.porcentaje),
     abiertas: await mesasConTotal(todas.filter((o) => o.estado !== 'cerrada')),
     sinCobrar: await mesasConTotal(todas.filter((o) => o.cerrada_sin_cobro)),
     ventas: cobros.reduce((s, c) => s + c.subtotal_centavos, 0),

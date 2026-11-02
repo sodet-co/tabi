@@ -26,6 +26,8 @@ export type CuentaComensal = {
   cuentas: {
     particion: string;
     pagada: boolean;
+    // Impuestos incluidos en el subtotal de la cuenta.
+    impuestos: { nombre: string; porcentaje: number; base: number; valor: number }[];
     items: { nombre: string; cantidad: number; subtotal: number; estado: EstadoPlato | null; nota: string | null; partes: number }[];
   }[];
 };

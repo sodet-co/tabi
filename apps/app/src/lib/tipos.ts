@@ -31,6 +31,8 @@ export type Producto = {
   precio: number;
   imagen: string;
   disponible: boolean;
+  // null: usa el impuesto general del restaurante. Porcentaje 0: exento.
+  impuesto?: { nombre: string; porcentaje: number } | null;
 };
 
 export type LineaPedido = {

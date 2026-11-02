@@ -152,6 +152,18 @@ export default function CierreDelDia() {
                 </table>
               </div>
             )}
+            {dia.impuestos.length > 0 && (
+              <div className="tabla-envoltura">
+                <table className="tabla">
+                  <thead><tr><th>Impuesto incluido en las ventas</th><th>Base</th><th>Impuesto</th></tr></thead>
+                  <tbody>
+                    {dia.impuestos.map((i) => (
+                      <tr key={`${i.nombre}${i.porcentaje}`}><td>{i.nombre} {i.porcentaje} %</td><td>{precio(i.base)}</td><td>{precio(i.valor)}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
             <form className="filtros" onSubmit={guardarBase}>
               <label className="campo"><span>Base de caja ($)</span>
                 <input id="base-caja" name="base" inputMode="numeric" defaultValue={enPesos(j.baseCaja)} key={j.baseCaja} /></label>

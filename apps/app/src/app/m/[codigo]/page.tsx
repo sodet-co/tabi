@@ -65,6 +65,12 @@ function VerCuenta({ cuenta, token }: { cuenta: CuentaComensal; token: string })
   // Precuenta: lo que falta pagar + la propina voluntaria sugerida sobre eso.
   const porPagar = cuenta.cuentas.filter((c) => !c.pagada).reduce((s, c) => s + totalCuenta(c), 0);
   const propina = Math.round(porPagar * cuenta.propina_sugerida / 100);
+  // Impuestos incluidos en lo que falta pagar, sumados por tipo.
+  const impuestos = new Map<string, number>();
+  cuenta.cuentas.filter((c) => !c.pagada).flatMap((c) => c.impuestos).forEach((i) => {
+    const clave = `${i.nombre} ${Number(i.porcentaje)} %`;
+    impuestos.set(clave, (impuestos.get(clave) ?? 0) + i.valor);
+  });
 
   async function avisar(motivo: 'mesero' | 'cuenta') {
     setEnviando(motivo);
@@ -111,6 +117,9 @@ function VerCuenta({ cuenta, token }: { cuenta: CuentaComensal; token: string })
         <div className="mi-cuenta__precuenta">
           {porPagar !== total && <p><span>Ya pagado</span><span>{precio(total - porPagar)}</span></p>}
           <p><span>Subtotal{porPagar !== total ? ' por pagar' : ''}</span><span>{precio(porPagar)}</span></p>
+          {[...impuestos].map(([nombre, valor]) => (
+            <p key={nombre} className="mi-cuenta__impuesto"><span>Incluye {nombre}</span><span>{precio(valor)}</span></p>
+          ))}
           {propina > 0 && <p><span>Propina sugerida ({cuenta.propina_sugerida} %, voluntaria)</span><span>{precio(propina)}</span></p>}
           <p className="mi-cuenta__total"><span>Total a pagar</span><span>{precio(porPagar + propina)}</span></p>
         </div>

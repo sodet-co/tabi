@@ -12,6 +12,7 @@ import {
   atenderLlamado, entregarItems, cobrarCuenta, anularCobro, cerrarSinCobrar, type Cuenta, type Item, type Llamado, type Mesa, type Ocupacion, type Producto, type Sala, type Seccion
 } from '@/lib/equipo/mesero';
 import { aviso } from '@/componentes/ui/aviso';
+import { desglosar, textoImpuesto } from '@/lib/impuestos';
 import { ModalPin } from './teclado-pin';
 import { minutos, useAhora } from './tiempo';
 import { AppCocina } from './app-cocina';
@@ -476,6 +477,7 @@ function HojaCobro({ cuenta, items, sala, nombreMesa, conPin, alCerrar }: {
   const [otra, setOtra] = useState('');
   const propina = modo === 'sugerida' ? sugerida : modo === 'otra' ? aCentavos(otra) : 0;
   const total = subtotal + propina;
+  const impuestos = desglosar(items.filter((i) => i.estado !== 'anulado').map((i) => ({ subtotal: i.subtotal, impuesto: i.impuesto })));
 
   const metodos = sala.metodosPago;
   const [filas, setFilas] = useState<FilaPago[]>([{ metodoId: metodos[0]?.id ?? '', monto: '', recibido: '' }]);
@@ -522,6 +524,9 @@ function HojaCobro({ cuenta, items, sala, nombreMesa, conPin, alCerrar }: {
 
         <section className="hoja__seccion precuenta">
           <p><span>Subtotal</span><span>{precio(subtotal)}</span></p>
+          {impuestos.map((i) => (
+            <p key={textoImpuesto(i)} className="precuenta__impuesto"><span>Incluye {textoImpuesto(i)}</span><span>{precio(i.valor)}</span></p>
+          ))}
           <div className="hoja__botones" role="radiogroup" aria-label="Propina">
             {sala.propinaSugerida > 0 && (
               <button role="radio" aria-checked={modo === 'sugerida'} className={`chip ${modo === 'sugerida' ? 'activo' : ''}`}

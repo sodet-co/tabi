@@ -30,7 +30,8 @@ const aProducto = (fila: Fila): Producto => ({
   descripcion: fila.descripcion || '',
   precio: fila.precio_centavos,
   imagen: fila.imagen_url || '',
-  disponible: fila.disponible
+  disponible: fila.disponible,
+  impuesto: fila.impuesto_nombre ? { nombre: fila.impuesto_nombre, porcentaje: Number(fila.impuesto_porcentaje) } : null
 });
 
 const aPedido = (fila: Fila): Pedido => ({
@@ -146,7 +147,10 @@ function datosRestaurante(slug: string): DatosRestaurante {
         precio_centavos: producto.precio,
         seccion_id: producto.seccionId,
         imagen_url: producto.imagen || null,
-        disponible: producto.disponible
+        disponible: producto.disponible,
+        ...(producto.impuesto !== undefined
+          ? { impuesto_nombre: producto.impuesto?.nombre ?? null, impuesto_porcentaje: producto.impuesto?.porcentaje ?? null }
+          : {})
       };
 
       const respuesta = producto.id
