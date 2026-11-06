@@ -7,7 +7,7 @@
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import {
-  cargarMesa, entrar, estadoMesa, guardarLlave, llamar, llaveGuardada, miCuenta,
+  cargarMesa, entrar, entrarNfc, estadoMesa, guardarLlave, llamar, llaveGuardada, miCuenta,
   type CuentaComensal, type InfoMesa, type ProductoCarta, type SeccionCarta
 } from '@/lib/comensal';
 import { precio } from '@/lib/formato';
@@ -24,7 +24,11 @@ const ESTADO: Record<NonNullable<CuentaComensal['cuentas'][number]['items'][numb
   entregado: { texto: 'Entregado', clase: 'pastilla pastilla--off' }
 };
 
-const totalCuenta = (c: CuentaComensal['cuentas'][number]) => c.items.reduce((s, i) => s + i.subtotal, 0);
+// Cada toque del NFC seguro sirve una vez: este registro evita mandarlo dos veces si el
+// efecto corre de nuevo (modo estricto de React en desarrollo).
+const toquesEnviados = new Set<string>();
+
+const totalCuenta =(c: CuentaComensal['cuentas'][number]) => c.items.reduce((s, i) => s + i.subtotal, 0);
 
 function Carta({ secciones, productos }: { secciones: SeccionCarta[]; productos: ProductoCarta[] }) {
   const [seccion, setSeccion] = useState(secciones[0]?.id ?? '');
@@ -145,11 +149,42 @@ export default function MesaComensal() {
   const [token, setToken] = useState<string | null>(() => llaveGuardada(codigo));
   const [cuenta, setCuenta] = useState<CuentaComensal | null>(null);
   const [cerrada, setCerrada] = useState(false);
+  // Solo en desarrollo: lo que llegó del NFC y lo que respondió la base, para diagnosticar.
+  const [diagnostico, setDiagnostico] = useState<string | null>(null);
 
   useEffect(() => {
     cargarMesa(codigo)
       .then((d) => { setDatos(d); setInfo(d?.info ?? null); })
       .catch((e: Error) => setError(e.message));
+  }, [codigo]);
+
+  // Tocó el NFC seguro: el enlace trae ?e=…&c=…. Se quita de la barra de direcciones (ya no
+  // sirve) y, si la mesa está abierta, entra directo a su cuenta.
+  useEffect(() => {
+    const parametros = new URLSearchParams(window.location.search);
+    // e/c son los nombres de Tabi; picc_data/cmac, los de los ejemplos de NXP.
+    const e = parametros.get('e') ?? parametros.get('picc_data');
+    const c = parametros.get('c') ?? parametros.get('cmac');
+    if (!e || !c) return;
+    window.history.replaceState(null, '', window.location.pathname);
+    if (toquesEnviados.has(e)) return;
+    toquesEnviados.add(e);
+    const detalle = `URL: ${window.location.href.split('?')[0]}?${parametros.toString()}`;
+    entrarNfc(codigo, e, c)
+      .then((r) => {
+        if (process.env.NODE_ENV === 'development') setDiagnostico(`${detalle}\n\nRespuesta: ${JSON.stringify({ ...r, token: r.token ? '…' : undefined })}`);
+        if (r.vinculado) aviso(`Chip vinculado a la mesa ${r.mesa}`);
+        else if (r.token) {
+          guardarLlave(codigo, r.token);
+          setCerrada(false);
+          setToken(r.token);
+          setHoja(true);
+        } else if (r.error) aviso(r.error);
+      })
+      .catch((error: Error) => {
+        aviso(error.message);
+        if (process.env.NODE_ENV === 'development') setDiagnostico(`${detalle}\n\nError: ${error.message}`);
+      });
   }, [codigo]);
 
   // Con llave, la cuenta se refresca cada 15 segundos mientras la pantalla está a la vista.
@@ -201,6 +236,10 @@ export default function MesaComensal() {
         <span className="mesa-etiqueta">Mesa {datos.info.mesa}</span>
       </header>
       <main className="contenido">
+        {diagnostico && (
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 12, background: '#fff3cd', color: '#3a2a00', padding: 12, borderRadius: 8 }}
+            onClick={() => setDiagnostico(null)}>{`Diagnóstico NFC (solo en desarrollo; toca para cerrar)\n\n${diagnostico}`}</pre>
+        )}
         <Carta secciones={datos.secciones} productos={datos.productos} />
       </main>
       <footer className="pie">Para pedir, llama al mesero. Carta digital hecha con Tabi</footer>

@@ -66,6 +66,12 @@ export async function entrar(codigo: string, acceso: string) {
   return r.token;
 }
 
+// Toque del NFC seguro: el enlace trae ?e=<datos cifrados>&c=<firma>. La base revisa la firma
+// y el contador del chip; un enlace ya usado no vuelve a entrar.
+export type ToqueNfc = { ok: boolean; token?: string; vinculado?: boolean; mesa?: string; cerrada?: boolean; error?: string };
+export const entrarNfc = (codigo: string, e: string, c: string) =>
+  rpc<ToqueNfc>('entrar_mesa_nfc', { p_codigo: codigo, p_e: e, p_c: c });
+
 // Null si la llave ya no sirve (la mesa se cerró).
 export const miCuenta = (token: string) => rpc<CuentaComensal | null>('mi_cuenta', { p_token: token });
 

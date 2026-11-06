@@ -151,3 +151,13 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: .875rem; }
 .cierre__efectivo { display: grid; gap: 8px; max-width: 420px; }
 .cierre__ok { color: var(--verde); font-weight: 600; }
 .cierre__dif { color: var(--rojo-600); font-weight: 600; }
+
+/* NFC seguro */
+.nfc-llave { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.nfc-llave code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .95rem; letter-spacing: .04em;
+  background: var(--carbon-050); border-radius: var(--radio-sm); padding: 6px 10px; color: var(--carbon-800);
+  overflow-wrap: anywhere;
+}
+.nfc-celda { display: grid; gap: 6px; justify-items: start; }
+.nfc-celda .tabla__acciones { justify-content: flex-start; flex-wrap: wrap; }
