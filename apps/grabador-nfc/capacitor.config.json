@@ -1,0 +1,12 @@
+{
+  "appId": "co.sodet.tabi.grabador",
+  "appName": "Grabador NFC",
+  "webDir": "www",
+  "server": {
+    "url": "https://tabi-app.sodet.co/admin/grabador-nfc",
+    "allowNavigation": ["tabi-app.sodet.co"]
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

@@ -16,6 +16,7 @@ import type { Restaurante } from '@/lib/tipos';
 import { useDatos } from '@/lib/usar-datos';
 import { LogoTabi } from '@tabi/ui/logo';
 import { Aviso } from '@/componentes/ui/aviso';
+import { enAppGrabador } from '@/lib/ntag424/nfc-nativo';
 
 // Rutas relativas al restaurante: '' es el dashboard de /admin/[slug].
 const ENLACES = [
@@ -43,6 +44,10 @@ function Nav({ slug, restaurantes }: { slug: string; restaurantes: Restaurante[]
   const router = useRouter();
   const ruta = usePathname();
   const base = `/admin/${slug}`;
+  // El grabador solo aparece dentro de la app Android Grabador NFC. El panel se pinta solo en
+  // el navegador (PanelProtegido espera la sesión), así que se puede preguntar al montar.
+  const [enApp] = useState(enAppGrabador);
+  const enlaces = enApp ? [...ENLACES, { destino: '/grabador-nfc', texto: 'Grabador NFC' }] : ENLACES;
 
   // Cambia de restaurante sin salir de la sección en la que está (menú, reportes…).
   function cambiar(nuevo: string) {
@@ -60,7 +65,7 @@ function Nav({ slug, restaurantes }: { slug: string; restaurantes: Restaurante[]
             {restaurantes.map((r) => <option key={r.slug} value={r.slug}>{r.nombre}</option>)}
           </select>
         )}
-        {ENLACES.map((enlace) => {
+        {enlaces.map((enlace) => {
           const destino = `${base}${enlace.destino}`;
           const activo = ruta === destino;
           return (

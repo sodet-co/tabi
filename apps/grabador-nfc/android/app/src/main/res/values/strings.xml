@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Grabador NFC</string>
+    <string name="title_activity_main">Grabador NFC</string>
+    <string name="package_name">co.sodet.tabi.grabador</string>
+    <string name="custom_url_scheme">co.sodet.tabi.grabador</string>
+</resources>

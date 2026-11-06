@@ -6,9 +6,11 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --no-warnings --test src/lib/ntag424/ntag424.test.ts"
   },
   "dependencies": {
+    "@capacitor/core": "^8.6.0",
     "@supabase/supabase-js": "^2.118.0",
     "@tabi/ui": "*",
     "next": "16.4.2",

@@ -161,3 +161,17 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: .875rem; }
 }
 .nfc-celda { display: grid; gap: 6px; justify-items: start; }
 .nfc-celda .tabla__acciones { justify-content: flex-start; flex-wrap: wrap; }
+
+/* Grabador NFC (app Android) */
+.grabador__opcion { display: flex; gap: 10px; align-items: flex-start; }
+.grabador__opcion input { margin-top: 4px; width: 20px; height: 20px; flex: none; }
+.grabador__opcion > span { display: grid; gap: 2px; }
+.grabador__estado { text-align: center; justify-items: center; }
+.grabador__estado--ok { border: 2px solid var(--verde); }
+.grabador__estado--error { border: 2px solid var(--rojo-600); text-align: left; justify-items: start; }
+.grabador__grande { font-family: var(--fuente-titulos, inherit); font-size: 1.5rem; font-weight: 700; color: var(--carbon-800); }
+.grabador__pasos { display: grid; gap: 6px; text-align: left; padding-left: 1.4em; justify-self: stretch; }
+.grabador__pasos li { color: var(--texto-suave); }
+.grabador__pasos li.hecho { color: var(--verde); }
+.grabador__pasos li.hecho::marker { content: '✓  '; }
+.grabador__pasos li.actual { color: var(--carbon-800); font-weight: 600; }

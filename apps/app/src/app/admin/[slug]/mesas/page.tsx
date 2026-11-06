@@ -5,6 +5,7 @@
 // reimprimir el de esa mesa).
 // NFC seguro (NTAG 424 DNA): el restaurante tiene una llave; cada chip se configura con ella
 // y se vincula a su mesa tocándolo. Con eso, el comensal entra a su cuenta sin código.
+import Link from 'next/link';
 import { useEffect, useState, type FormEvent } from 'react';
 import QRCode from 'qrcode';
 import { CONFIG } from '@/lib/config';
@@ -13,7 +14,7 @@ import {
   renombrarAmbiente, vincularChip,
   type AmbienteAdmin, type MesaAdmin
 } from '@/lib/mesas-admin';
-import { useFuente } from '@/lib/restaurante-actual';
+import { useFuente, useSlug } from '@/lib/restaurante-actual';
 import { useDatos } from '@/lib/usar-datos';
 import { aviso } from '@/componentes/ui/aviso';
 
@@ -182,18 +183,26 @@ function Ambiente({ ambiente, mesas, qrs, restauranteId, nfc, alCambiar }: {
 
 const LLAVE_FABRICA = '0'.repeat(32);
 
-function NfcSeguro({ restauranteId, llave, alCambiar }: { restauranteId: string; llave: string | null; alCambiar: () => void }) {
+// Al rotar, la llave actual pasa a ser la "anterior": los chips siguen sirviendo con ella
+// hasta que se vuelven a grabar. Los que ya tenían la anterior dejan de funcionar.
+const AVISO_ROTAR = 'Los chips seguirán funcionando con la llave actual hasta que los vuelvas a grabar con el Grabador NFC. '
+  + 'Si algún chip todavía tiene la llave anterior a esta, dejará de funcionar. ¿Continuar?';
+
+function NfcSeguro({ restauranteId, llave, viejos, alCambiar }: {
+  restauranteId: string; llave: string | null; viejos: number; alCambiar: () => void;
+}) {
+  const slug = useSlug();
   const [otra, setOtra] = useState(false);
 
   async function generar() {
-    if (llave && !confirm('Los chips configurados con la llave actual dejarán de funcionar hasta que los configures con la nueva. ¿Continuar?')) return;
+    if (llave && !confirm(AVISO_ROTAR)) return;
     if (await intentar(() => cambiarLlaveNfc(restauranteId), llave ? 'Llave nueva generada' : 'NFC seguro activado')) alCambiar();
   }
 
   async function guardarOtra(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const valor = String(new FormData(evento.currentTarget).get('llave') ?? '');
-    if (llave && !confirm('Los chips configurados con la llave actual dejarán de funcionar. ¿Continuar?')) return;
+    if (llave && !confirm(AVISO_ROTAR)) return;
     if (await intentar(() => cambiarLlaveNfc(restauranteId, valor), 'Llave guardada')) { setOtra(false); alCambiar(); }
   }
 
@@ -202,9 +211,15 @@ function NfcSeguro({ restauranteId, llave, alCambiar }: { restauranteId: string;
       <div className="bloque__titulo"><h2>NFC seguro</h2>{llave && <span className="pastilla pastilla--ok">Activado</span>}</div>
       <p className="texto-pequeno texto-suave">
         Con chips NTAG 424 DNA, cada toque genera un enlace que sirve una sola vez: el comensal entra a su cuenta sin el código de 4 dígitos,
-        y un enlace copiado o una foto no sirven. Configura cada chip con esta llave (en las llaves de lectura SDM) y con el enlace NFC de su
-        mesa; después toca «Vincular chip» y acerca un celular al chip.
+        y un enlace copiado o una foto no sirven. Graba cada chip con la app <Link href={`/admin/${slug}/grabador-nfc`}>Grabador NFC</Link> (Android):
+        con un toque queda con el enlace de su mesa, esta llave y vinculado. También se puede configurar a mano con TagWriter (llaves de
+        lectura SDM y enlace NFC de la mesa) y después «Vincular chip».
       </p>
+      {viejos > 0 && (
+        <p className="texto-pequeno pastilla pastilla--alerta">
+          {viejos === 1 ? '1 chip tiene' : `${viejos} chips tienen`} la llave anterior. Siguen funcionando: vuelve a grabarlos con el Grabador NFC.
+        </p>
+      )}
       {llave ? (
         <div className="nfc-llave">
           <code>{llave.match(/.{4}/g)?.join(' ')}</code>
@@ -285,7 +300,8 @@ export default function Mesas() {
         Un NFC sencillo (NTAG213) funciona igual que el QR: grábale el enlace de la mesa.
       </p>
 
-      <NfcSeguro restauranteId={restaurante.id} llave={llaveNfc} alCambiar={recargar} />
+      <NfcSeguro restauranteId={restaurante.id} llave={llaveNfc} viejos={mesas.reduce((n, m) => n + m.chipsLlaveVieja, 0)}
+        alCambiar={recargar} />
 
       {ambientes.map((a) => (
         <Ambiente key={a.id} ambiente={a} mesas={mesas.filter((m) => m.ambienteId === a.id)} qrs={qrs}
