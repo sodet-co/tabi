@@ -173,7 +173,8 @@ begin
   insert into public.chips_nfc as ch (restaurante_id, mesa_id, uid, ultimo_contador, ultimo_toque, grabado_en)
   values (v_mesa.restaurante_id, v_mesa.id, v_lectura ->> 'uid', (v_lectura ->> 'contador')::integer, now(), now())
   on conflict (restaurante_id, uid) do update
-    set mesa_id = excluded.mesa_id, ultimo_contador = excluded.ultimo_contador, ultimo_toque = now(),
+    -- El contador nunca baja: confirmar con un toque viejo no puede revivir enlaces ya usados.
+    set mesa_id = excluded.mesa_id, ultimo_contador = greatest(ch.ultimo_contador, excluded.ultimo_contador), ultimo_toque = now(),
         vinculado_en = case when ch.mesa_id = excluded.mesa_id then ch.vinculado_en else now() end,
         grabado_en = now(), llave_vieja = false;
   update public.mesas set nfc_vincular_hasta = null where id = v_mesa.id;

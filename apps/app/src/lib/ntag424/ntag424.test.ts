@@ -71,6 +71,19 @@ test('ChangeFileSettings en CommMode.Full (AN12196 tabla 18)', async () => {
   assert.equal(chip.sesion?.contador, 2);
 });
 
+test('Rechaza una respuesta del chip con la firma alterada y cierra la sesión', async () => {
+  // La misma respuesta de AN12196 con el último bit del MAC cambiado (…3D → …3C).
+  const chip = new Ntag424(guion([
+    ['905F0000190261B6D97903566E84C3AE5274467E89EAD799B7C1A0EF7A0400', '57BFF87B1241E93C9100']
+  ]));
+  chip.sesion = {
+    ti: deHex('9D00C4DF'), llaveEnc: deHex('1309C877509E5A215007FF0ED19CA564'),
+    llaveMac: deHex('4C6626F5E72EA694202139295C7A7FC7'), contador: 1
+  };
+  await assert.rejects(chip.cambiarAjustesArchivo(2, deHex('4000E0C1F121200000430000430000')), /firma válida/);
+  assert.equal(chip.sesion, null);
+});
+
 test('ChangeKey de otra llave y de la llave 0 (AN12196 tablas 25 y 26)', async () => {
   const nueva2 = deHex('F3847D627727ED3BC9C4CC050489B966');
   assert.equal(hex(crc32Nxp(nueva2)), '789DFADC');
