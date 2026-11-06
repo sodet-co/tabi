@@ -21,11 +21,19 @@ function revisar<T>({ data, error }: { data: T | null; error: { message: string;
 }
 
 export async function cargarMesas(restauranteId: string) {
+  // Mientras no esté aplicada la migración del grabador, chips_nfc no tiene llave_vieja
+  // (42703): se cargan sin ella para que Mesas siga funcionando.
+  const cargarChips = async () => {
+    const conVieja = await supabase().from('chips_nfc').select('mesa_id, llave_vieja').eq('restaurante_id', restauranteId);
+    if (conVieja.error?.code !== '42703') return conVieja;
+    const sinVieja = await supabase().from('chips_nfc').select('mesa_id').eq('restaurante_id', restauranteId);
+    return { ...sinVieja, data: sinVieja.data?.map((c) => ({ ...c, llave_vieja: false })) ?? null };
+  };
   const [ambientes, mesas, chips, llave] = await Promise.all([
     supabase().from('ambientes').select('id, nombre, orden').eq('restaurante_id', restauranteId).order('orden').order('nombre'),
     supabase().from('mesas').select('id, ambiente_id, nombre, orden, codigo, activa, nfc_vincular_hasta')
       .eq('restaurante_id', restauranteId).order('orden'),
-    supabase().from('chips_nfc').select('mesa_id, llave_vieja').eq('restaurante_id', restauranteId),
+    cargarChips(),
     supabase().rpc('nfc_llave', { p_restaurante_id: restauranteId })
   ]);
   const porMesa = new Map<string, number>();
@@ -79,7 +87,10 @@ export const enlaceMesa = (codigo: string) =>
 // toque, los datos cifrados (e, 32 caracteres) y la firma (c, 16 caracteres).
 export const PLANTILLA_E = '0'.repeat(32);
 export const PLANTILLA_C = '0'.repeat(16);
-export const enlaceNfc = (codigo: string) => `${enlaceMesa(codigo)}?e=${PLANTILLA_E}&c=${PLANTILLA_C}`;
+// El chip siempre lleva la dirección pública, aunque el panel se abra desde un PC de pruebas
+// (si no, quedaría grabado http://192.168…, que el comensal no puede abrir).
+const ORIGEN_PUBLICO = 'https://tabi-app.sodet.co';
+export const enlaceNfc = (codigo: string) => `${ORIGEN_PUBLICO}/m/${codigo}?e=${PLANTILLA_E}&c=${PLANTILLA_C}`;
 
 async function rpcAdmin<T>(funcion: string, argumentos: Record<string, unknown>, mensaje: string) {
   const { data, error } = await supabase().rpc(funcion, argumentos);
