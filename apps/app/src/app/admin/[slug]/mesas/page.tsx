@@ -211,7 +211,7 @@ function NfcSeguro({ restauranteId, llave, viejos, alCambiar }: {
       <div className="bloque__titulo"><h2>NFC seguro</h2>{llave && <span className="pastilla pastilla--ok">Activado</span>}</div>
       <p className="texto-pequeno texto-suave">
         Con chips NTAG 424 DNA, cada toque genera un enlace que sirve una sola vez: el comensal entra a su cuenta sin el código de 4 dígitos,
-        y un enlace copiado o una foto no sirven. Graba cada chip con la app <Link href={`/admin/${slug}/grabador-nfc`}>Grabador NFC</Link> (Android):
+        y un enlace copiado o una foto no sirven. Graba cada chip con la app <Link href={`/admin/grabador-nfc/${slug}`}>Grabador NFC</Link> (Android):
         con un toque queda con el enlace de su mesa, esta llave y vinculado. También se puede configurar a mano con TagWriter (llaves de
         lectura SDM y enlace NFC de la mesa) y después «Vincular chip».
       </p>

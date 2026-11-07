@@ -7,6 +7,10 @@ import { LogoTabi } from '@tabi/ui/logo';
 import { CONFIG } from '@/lib/config';
 import { sesion } from '@/lib/sesion';
 import { estadoDispositivo } from '@/lib/equipo/dispositivo';
+import { enAppGrabador } from '@/lib/ntag424/nfc-nativo';
+
+// Dentro de la app Android Grabador NFC el login lleva al grabador, no al panel.
+const destino = () => (enAppGrabador() ? '/admin/grabador-nfc' : '/admin');
 
 // En modo local (demo) se entra con un clic; con Supabase se piden correo y contraseña.
 const CON_CREDENCIALES = CONFIG.FUENTE === 'supabase';
@@ -26,14 +30,14 @@ export default function Login() {
   useEffect(() => {
     let vigente = true;
     (async () => {
-      const comoAdmin = new URLSearchParams(window.location.search).has('admin');
+      const comoAdmin = new URLSearchParams(window.location.search).has('admin') || enAppGrabador();
       if (CON_CREDENCIALES && !comoAdmin && (await estadoDispositivo().catch(() => null))) {
         if (vigente) router.replace('/equipo');
         return;
       }
       // Si ya hay sesión, no tiene sentido mostrar el formulario.
       if (await sesion.activa()) {
-        if (vigente) router.replace('/admin');
+        if (vigente) router.replace(destino());
         return;
       }
       if (vigente) setListo(true);
@@ -55,7 +59,7 @@ export default function Login() {
       (formulario.elements.namedItem('clave') as HTMLInputElement | null)?.focus();
       return;
     }
-    router.push('/admin');
+    router.push(destino());
   }
 
   if (!listo) return <main className="acceso-caja" aria-busy="true" />;
@@ -85,7 +89,7 @@ export default function Login() {
       </form>
 
       {!CON_CREDENCIALES && <p className="acceso-pista">Modo demo: entras directo, sin usuario ni contraseña.</p>}
-      {CON_CREDENCIALES && <p className="acceso-volver"><Link href="/equipo">¿Eres del equipo? Vincular este celular</Link></p>}
+      {CON_CREDENCIALES && !enAppGrabador() && <p className="acceso-volver"><Link href="/equipo">¿Eres del equipo? Vincular este celular</Link></p>}
     </main>
   );
 }
